@@ -1,0 +1,82 @@
+apply plugin: 'java'
+
+if (project.hasProperty("mcreator_path")) {
+    project.ext.MCREATOR_PATH = project.getProperty("mcreator_path")
+} else {
+    throw new GradleException('Missing mcreator_path property in gradle.properties')
+}
+
+// workaround for IDEA-265203
+System.setProperty("user.dir", projectDir.toString())
+
+group = 'net.mcreator.vcs'
+version = '2023.2.1'
+
+sourceCompatibility = 17
+targetCompatibility = 17
+
+configurations {
+    implementation.extendsFrom export
+}
+
+dependencies {
+    implementation fileTree(dir: MCREATOR_PATH + '/lib', include: ['*.jar'])
+    export 'org.openl.jgit:org.eclipse.jgit:6.3.0.202209071007-openl-2'
+}
+
+tasks.jar {
+    archiveFileName.set('mcreator-vcs-' + project.version + '.zip')
+    from {
+        configurations.export.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+tasks.register("exportPlugin", Copy.class) {
+    doFirst {
+        delete 'build/export/'
+        mkdir 'build/export/'
+    }
+
+    dependsOn jar
+
+    into 'build/export'
+    into('') {
+        from zipTree(file('build/libs/mcreator-vcs-' + project.version + '.zip'))
+        from 'LICENSE.txt'
+    }
+    into('license') { from 'license' }
+}
+
+task buildPlugin(type: Zip) {
+    dependsOn exportPlugin
+
+    delete 'build/libs/'
+
+    from 'build/export/'
+    into ''
+    destinationDirectory = file('build/libs/')
+    archiveFileName = 'mcreator-vcs-' + project.version + '.zip'
+
+    doLast {
+        delete 'build/export/'
+    }
+}
+
+task runMCreatorWithPlugin(type: JavaExec) {
+    dependsOn jar
+
+    environment("MCREATOR_PLUGINS_FOLDER", file("./build/libs"))
+
+    jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED'
+
+    classpath = sourceSets.main.runtimeClasspath.filter(e -> {
+        return !e.getAbsolutePath().startsWith(file("./").getAbsolutePath())
+    })
+    mainClass.set('net.mcreator.Launcher')
+
+    workingDir = MCREATOR_PATH
+}
+
+repositories {
+    mavenCentral()
+}
