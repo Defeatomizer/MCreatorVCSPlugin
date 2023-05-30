@@ -1,0 +1,55 @@
+name: Bug report
+description: Create a report to help us improve (search for duplicates first)
+labels: bug
+body:
+ - type: textarea
+   attributes:
+    label: Issue description
+    description: Explain clearly and unambiguously what went wrong
+    placeholder: Tell us here about the bug/problem
+   validations:
+    required: true
+ - type: textarea
+   attributes:
+    label: How to reproduce this issue?
+    description: Try to explain what you did for the bug to occur. A good explanation of steps to reproduce helps us locate the bug faster. If applicable, add screenshots to help explain your problem.
+    placeholder: |
+      1. ...
+      2. ...
+      
+      ...
+   validations:
+     required: true
+ - type: dropdown
+   attributes:
+    label: Operating system
+    description: Which operating system do you use with MCreator?
+    options:
+     - Windows
+     - macOS
+     - Linux
+     - Other (Tell us at the Details part)
+   validations:
+     required: true
+ - type: textarea
+   attributes:
+    label: Details
+    description: To understand the issue, we need some details of your setup & system
+    placeholder: |
+      MCreator version: [2023.2 / branch:master / ...]
+      Plugin version: [2023.2.1 / ...]
+   validations:
+     required: true
+ - type: textarea
+   attributes:
+    label: Remote repository
+    description: If desired, attach the link to the remote repository you're synchronizing your local workspace with
+    placeholder: https://github.com/<username>/<project_name>
+ - type: textarea
+   attributes:
+    label: Logs
+    description: |
+      If applicable, include build logs (full logs, do not crop them, in text format, screenshots of logs are not acceptable) from file C:/Users/<username>/.mcreator/logs/mcreator.log or terminal so we can see what part of the plugin initiates the bug.
+      
+      Longer logs should be posted on [GitHub Gists](https://gist.github.com/) (or other paste service) and linked here.
+    placeholder: https://gist.github.com/...
