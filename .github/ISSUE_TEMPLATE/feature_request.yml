@@ -17,7 +17,6 @@ body:
    attributes:
     label: Visual example(s)
     description: If desired, attach sketches/edited screenshots showing how you expect the feature to appear/get accessed
-    placeholder: https://github.com/<username>/<project_name>
  - type: textarea
    attributes:
     label: Additional context
