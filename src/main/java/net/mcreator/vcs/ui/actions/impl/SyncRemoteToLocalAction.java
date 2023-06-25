@@ -164,7 +164,7 @@ public class SyncRemoteToLocalAction extends VCSAction {
 
 			actionRegistry.getMCreator().setCursor(Cursor.getDefaultCursor());
 		});
-		setIcon(UIRES.get("16px.vcspull"));
+		setIcon(UIRES.get("16px.vcs_pull"));
 	}
 
 }

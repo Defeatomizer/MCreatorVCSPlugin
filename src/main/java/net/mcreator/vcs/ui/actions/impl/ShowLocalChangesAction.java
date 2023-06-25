@@ -38,7 +38,9 @@ public class ShowLocalChangesAction extends VCSAction {
 				git.rm().addFilepattern(".").call();
 				git.add().addFilepattern(".").call();
 				Status status = git.status().call();
-				JOptionPane.showMessageDialog(actionRegistry.getMCreator(), new LocalChangesPanel(status),
+				JOptionPane.showMessageDialog(actionRegistry.getMCreator(), status.hasUncommittedChanges() ?
+								new LocalChangesPanel(status) :
+								L10N.label("dialog.vcs.show_unsynced_changes.empty"),
 						L10N.t("dialog.vcs.show_unsynced_changes.title"), JOptionPane.PLAIN_MESSAGE);
 			} catch (GitAPIException ignored) {
 			}

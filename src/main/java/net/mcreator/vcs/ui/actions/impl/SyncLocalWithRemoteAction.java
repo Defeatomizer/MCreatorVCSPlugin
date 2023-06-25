@@ -208,7 +208,7 @@ public class SyncLocalWithRemoteAction extends VCSAction {
 			if (needsWorkspaceBuildAfter)
 				actionRegistry.buildWorkspace.doAction();
 		});
-		setIcon(UIRES.get("16px.vcspush"));
+		setIcon(UIRES.get("16px.vcs_push"));
 	}
 
 }

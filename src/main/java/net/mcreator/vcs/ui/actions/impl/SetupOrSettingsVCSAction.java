@@ -43,7 +43,7 @@ public class SetupOrSettingsVCSAction extends BasicAction implements VCSStateCha
 
 	@Override public void vcsStateChanged() {
 		if (WorkspaceVCS.getVCSWorkspace(actionRegistry.getMCreator().getWorkspace()) == null) {
-			setIcon(UIRES.get("16px.setupvcs"));
+			setIcon(UIRES.get("16px.vcs_setup"));
 		} else {
 			setIcon(UIRES.get("16px.vcs"));
 		}

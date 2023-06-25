@@ -35,7 +35,7 @@ public class SetupVCSAction extends VCSAction {
 	public SetupVCSAction(ActionRegistry actionRegistry) {
 		super(actionRegistry, L10N.t("action.vcs.setup"),
 				e -> setupVCSForWorkspaceIfNotYet(actionRegistry.getMCreator()));
-		setIcon(UIRES.get("16px.setupvcs"));
+		setIcon(UIRES.get("16px.vcs_setup"));
 	}
 
 	@Override public void setEnabled(boolean b) {
