@@ -43,22 +43,26 @@ import java.awt.*;
 import java.io.File;
 
 @SuppressWarnings("unused") public class Launcher extends JavaPlugin {
+
 	private static final Logger LOG = LogManager.getLogger("MCreator VCS");
 
 	public Launcher(Plugin plugin) {
 		super(plugin);
 		addListener(WorkspaceSelectorLoadedEvent.class, event -> SwingUtilities.invokeLater(() -> {
 			WorkspaceSelector selector = event.getWorkspaceSelector();
-			selector.addWorkspaceButton(L10N.t("dialog.workspace_selector.clone"), UIRES.get("vcsclone"),
+			selector.addWorkspaceButton(L10N.t("dialog.workspace_selector.clone"), UIRES.get("vcs_clone"),
 					e -> cloneRemote(selector));
 		}));
 		addListener(MCreatorLoadedEvent.class, event -> {
 			if (WorkspaceVCS.loadVCSWorkspace(event.getMCreator().getWorkspace()))
 				LOG.info("Loaded VCS for current workspace");
 
-			event.getMCreator().mv.addVerticalTab("vcs", L10N.t("workspace.category.remote_workspace"),
-					new WorkspacePanelVCS(event.getMCreator().mv));
-			initActions(event.getMCreator());
+			SwingUtilities.invokeLater(() -> {
+				MCreator mcreator = event.getMCreator();
+				mcreator.mv.addVerticalTab("vcs", L10N.t("workspace.category.remote_workspace"),
+						new WorkspacePanelVCS(mcreator.mv));
+				initActions(mcreator);
+			});
 		});
 	}
 
@@ -108,4 +112,5 @@ import java.io.File;
 		mcreator.getToolBar().addToRightToolbar(actionRegistry.syncFromRemote);
 		mcreator.getToolBar().addToRightToolbar(actionRegistry.syncToRemote);
 	}
+
 }
