@@ -22,6 +22,7 @@ package net.mcreator.vcs.ui.actions.impl;
 import net.mcreator.generator.Generator;
 import net.mcreator.generator.setup.WorkspaceGeneratorSetup;
 import net.mcreator.ui.MCreator;
+import net.mcreator.ui.action.impl.workspace.WorkspaceSettingsAction;
 import net.mcreator.ui.dialogs.workspace.WorkspaceGeneratorSetupDialog;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.util.FilenameUtilsPatched;
@@ -29,6 +30,7 @@ import net.mcreator.vcs.util.GSONClone;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 import net.mcreator.workspace.Workspace;
 import net.mcreator.workspace.settings.WorkspaceSettings;
+import net.mcreator.workspace.settings.WorkspaceSettingsChange;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.Git;
@@ -80,6 +82,10 @@ public class BranchSwitchAction {
 					localWorkspace.switchGenerator(localWorkspace.getWorkspaceSettings().getCurrentGenerator());
 					WorkspaceGeneratorSetupDialog.runSetup(mcreator, false);
 				}
+				WorkspaceSettingsChange workspaceSettingsChange = new WorkspaceSettingsChange(preSwitchSettings,
+						localWorkspace.getWorkspaceSettings());
+				if (workspaceSettingsChange.refactorNeeded())
+					WorkspaceSettingsAction.refactorWorkspace(mcreator, workspaceSettingsChange);
 				// possible refactor after sync end
 
 				mcreator.statusBar.setPersistentMessage(L10N.t("statusbar.vcs.switched_working_branch",

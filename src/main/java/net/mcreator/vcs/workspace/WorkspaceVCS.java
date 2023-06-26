@@ -55,6 +55,7 @@ public class WorkspaceVCS {
 
 		try {
 			this.git = Git.init().setDirectory(workspace.getWorkspaceFolder()).call();
+			workspaces.put(workspace.getWorkspaceFolder(), this);
 		} catch (GitAPIException e) {
 			LOG.error("Failed to load repository", e);
 		}
@@ -122,7 +123,7 @@ public class WorkspaceVCS {
 
 		VCSInfo.saveToFile(vcsInfo, new File(workspace.getFolderManager().getWorkspaceCacheDir(), "vcsInfo"));
 
-		workspaces.put(workspace.getWorkspaceFolder(), new WorkspaceVCS(workspace, vcsInfo));
+		new WorkspaceVCS(workspace, vcsInfo);
 	}
 
 	public static boolean loadVCSWorkspace(Workspace workspace) {
@@ -130,7 +131,7 @@ public class WorkspaceVCS {
 			VCSInfo vcsInfo = VCSInfo.loadFromFile(
 					new File(workspace.getFolderManager().getWorkspaceCacheDir(), "vcsInfo"));
 			if (vcsInfo != null) {
-				workspaces.put(workspace.getWorkspaceFolder(), new WorkspaceVCS(workspace, vcsInfo));
+				new WorkspaceVCS(workspace, vcsInfo);
 				return true;
 			}
 		}
