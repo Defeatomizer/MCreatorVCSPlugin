@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class VCSActionRegistry {
+
 	private static final Map<File, VCSActionRegistry> vcsActions = new HashMap<>();
 
 	public final BasicAction setupVCS;
@@ -36,6 +37,7 @@ public class VCSActionRegistry {
 	public final BasicAction syncToRemote;
 	public final BasicAction syncFromRemote;
 	public final BasicAction showUnsyncedChanges;
+	public final BasicAction rollbackUnsyncedChanges;
 	public final BasicAction remoteWorkspaceSettings;
 
 	public VCSActionRegistry(MCreator mcreator) {
@@ -47,10 +49,12 @@ public class VCSActionRegistry {
 		this.syncToRemote = new SyncLocalWithRemoteAction(mcreator.getActionRegistry());
 		this.syncFromRemote = new SyncRemoteToLocalAction(mcreator.getActionRegistry());
 		this.showUnsyncedChanges = new ShowLocalChangesAction(mcreator.getActionRegistry());
+		this.rollbackUnsyncedChanges = new RollbackLocalChangesAction(mcreator.getActionRegistry());
 		this.remoteWorkspaceSettings = new VCSInfoSettingsAction(mcreator.getActionRegistry());
 	}
 
 	public static VCSActionRegistry get(MCreator mcreator) {
 		return vcsActions.get(mcreator.getWorkspaceFolder());
 	}
+
 }

@@ -100,6 +100,7 @@ import java.io.File;
 		vcs.add(actionRegistry.setupVCS);
 		vcs.addSeparator();
 		vcs.add(actionRegistry.showUnsyncedChanges);
+		vcs.add(actionRegistry.rollbackUnsyncedChanges);
 		vcs.addSeparator();
 		vcs.add(actionRegistry.syncFromRemote);
 		vcs.add(actionRegistry.syncToRemote);
@@ -109,6 +110,7 @@ import java.io.File;
 		mcreator.getMainMenuBar().add(vcs);
 
 		mcreator.getToolBar().addToRightToolbar(actionRegistry.setupVCSOrSettings);
+		mcreator.getToolBar().addToRightToolbar(actionRegistry.rollbackUnsyncedChanges);
 		mcreator.getToolBar().addToRightToolbar(actionRegistry.syncFromRemote);
 		mcreator.getToolBar().addToRightToolbar(actionRegistry.syncToRemote);
 	}
