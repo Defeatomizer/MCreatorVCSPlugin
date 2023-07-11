@@ -11,7 +11,7 @@ if (project.hasProperty("mcreator_path")) {
 System.setProperty("user.dir", projectDir.toString())
 
 group = 'net.mcreator.vcs'
-version = '2023.2.1'
+version = '2023.2.2'
 
 sourceCompatibility = 17
 targetCompatibility = 17
