@@ -93,7 +93,7 @@ public class SyncLocalWithRemoteAction extends VCSAction {
 						// first commit our changes
 						CommitCommand commitCommand = git.commit().setAll(true).setMessage(commitMessage);
 						try {
-							commitCommand = commitCommand.setAuthor(workspaceVCS.getInfo().getUsername(),
+							commitCommand = commitCommand.setCommitter(workspaceVCS.getInfo().getUsername(),
 									new PersonIdent(git.getRepository()).getEmailAddress());
 						} catch (Exception ignored) {
 						}
