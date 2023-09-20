@@ -101,18 +101,13 @@ public class WorkspaceVCS {
 					new UsernamePasswordCredentialsProvider(vcsInfo.getUsername(), vcsInfo.getPasswordDirect())).call();
 			if (git.getRepository().findRef(Constants.FETCH_HEAD) != null) {
 				if (git.getRepository().findRef(Constants.FETCH_HEAD).getObjectId() != null) {
-					git.getRepository().close();
-					git.close();
-					FileIO.deleteDir(git.getRepository().getDirectory());
+					closeVCS(git);
 					throw new WorkspaceNotEmptyException();
 				}
 			}
 		} catch (GitAPIException | IOException | URISyntaxException e) {
-			if (git != null) {
-				git.getRepository().close();
-				git.close();
-				FileIO.deleteDir(git.getRepository().getDirectory());
-			}
+			if (git != null)
+				closeVCS(git);
 			LOG.error("Failed to init GIT repository", e);
 		}
 
@@ -143,7 +138,7 @@ public class WorkspaceVCS {
 	}
 
 	public static void removeVCSWorkspace(Workspace workspace) {
-		workspaces.remove(workspace.getWorkspaceFolder());
+		closeVCS(workspaces.remove(workspace.getWorkspaceFolder()).git);
 	}
 
 	private static boolean isVCSInitialized(Workspace workspace) {
@@ -157,6 +152,12 @@ public class WorkspaceVCS {
 			LOG.warn("Failed to check for Git repo", e);
 		}
 		return false;
+	}
+
+	private static void closeVCS(Git git) {
+		git.getRepository().close();
+		git.close();
+		FileIO.deleteDir(git.getRepository().getDirectory());
 	}
 
 }

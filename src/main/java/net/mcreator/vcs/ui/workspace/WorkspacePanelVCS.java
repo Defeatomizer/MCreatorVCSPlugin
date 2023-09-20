@@ -185,8 +185,12 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 	}
 
 	private void checkoutToSelectedCommit() {
+		int row = commits.getSelectedRow();
+		if (row == -1)
+			return;
+
 		WorkspaceVCS workspaceVCS = WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace());
-		String shortCommitId = commits.getValueAt(commits.getSelectedRow(), 0).toString();
+		String shortCommitId = commits.getValueAt(row, 0).toString();
 		if (shortCommitId != null && workspaceVCS != null) {
 			try {
 				Git git = workspaceVCS.getGit();

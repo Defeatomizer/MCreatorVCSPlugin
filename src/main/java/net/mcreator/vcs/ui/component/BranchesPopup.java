@@ -111,10 +111,9 @@ public class BranchesPopup extends JPopupMenu {
 			List<Ref> refs = git.branchList().setListMode(ListBranchCommand.ListMode.ALL).call();
 
 			for (Ref ref : refs) {
-				JMenuItem menuItem = new JRadioButtonMenuItem(ref.getName());
-				add(menuItem);
+				JMenuItem menuItem = new JMenuItem(ref.getName());
 				if (git.getRepository().getFullBranch().equals(ref.getName())) {
-					menuItem.setSelected(true);
+					continue;
 				} else if (deletion) {
 					menuItem.addActionListener(e -> {
 						if (JOptionPane.OK_OPTION == JOptionPane.showConfirmDialog(mcreator,
@@ -134,6 +133,7 @@ public class BranchesPopup extends JPopupMenu {
 					menuItem.addActionListener(
 							e -> BranchSwitchAction.switchBranch(mcreator, workspaceVCS, ref.getName()));
 				}
+				add(menuItem);
 			}
 		} catch (Exception ignored) {
 		}
