@@ -32,6 +32,7 @@ import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.RefSpec;
 
 import javax.swing.*;
@@ -111,17 +112,23 @@ public class BranchesPopup extends JPopupMenu {
 			List<Ref> refs = git.branchList().setListMode(ListBranchCommand.ListMode.ALL).call();
 
 			for (Ref ref : refs) {
-				JMenuItem menuItem = new JMenuItem(ref.getName());
-				if (git.getRepository().getFullBranch().equals(ref.getName())) {
+				if (deletion && git.getRepository().getFullBranch().equals(ref.getName()))
 					continue;
-				} else if (deletion) {
+
+				JMenuItem menuItem;
+				if (deletion) {
+					menuItem = new JMenuItem(ref.getName());
 					menuItem.addActionListener(e -> {
 						if (JOptionPane.OK_OPTION == JOptionPane.showConfirmDialog(mcreator,
 								L10N.t("dialog.vcs.branches_popup.delete_branch.message", ref.getName()),
 								L10N.t("dialog.vcs.branches_popup.delete_branch.title"), JOptionPane.YES_NO_OPTION)) {
 							try {
+								CredentialsProvider credentialsProvider = workspaceVCS.getCredentialsProvider(
+										mcreator.getWorkspaceFolder(), mcreator);
 								git.reset().setMode(ResetCommand.ResetType.HARD).call();
 								git.branchDelete().setBranchNames(ref.getName()).call();
+								git.fetch().setRemote("origin").setRemoveDeletedRefs(true)
+										.setCredentialsProvider(credentialsProvider).call();
 
 								mcreator.mv.updateMods();
 							} catch (GitAPIException er) {
@@ -130,8 +137,13 @@ public class BranchesPopup extends JPopupMenu {
 						}
 					});
 				} else {
-					menuItem.addActionListener(
-							e -> BranchSwitchAction.switchBranch(mcreator, workspaceVCS, ref.getName()));
+					menuItem = new JRadioButtonMenuItem(ref.getName());
+					if (git.getRepository().getFullBranch().equals(ref.getName())) {
+						menuItem.setSelected(true);
+					} else {
+						menuItem.addActionListener(
+								e -> BranchSwitchAction.switchBranch(mcreator, workspaceVCS, ref.getName()));
+					}
 				}
 				add(menuItem);
 			}
