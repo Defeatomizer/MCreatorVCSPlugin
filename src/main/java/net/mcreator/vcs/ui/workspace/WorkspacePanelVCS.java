@@ -19,16 +19,16 @@
 
 package net.mcreator.vcs.ui.workspace;
 
-import net.mcreator.vcs.ui.actions.VCSActionRegistry;
-import net.mcreator.vcs.ui.actions.impl.SetupVCSAction;
 import net.mcreator.ui.component.TransparentToolBar;
 import net.mcreator.ui.component.util.ComponentUtils;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
 import net.mcreator.ui.laf.SlickDarkScrollBarUI;
-import net.mcreator.vcs.ui.component.BranchesPopup;
 import net.mcreator.ui.workspace.AbstractWorkspacePanel;
 import net.mcreator.ui.workspace.WorkspacePanel;
+import net.mcreator.vcs.ui.actions.VCSActionRegistry;
+import net.mcreator.vcs.ui.actions.impl.SetupVCSAction;
+import net.mcreator.vcs.ui.component.BranchesPopup;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -94,11 +94,38 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 		switchBranch.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
 		bar.add(switchBranch);
 
+		JButton fetchBranches = L10N.button("dialog.vcs.branches_popup.fetch_branches");
+		fetchBranches.setIcon(UIRES.get("16px.ext.gif"));
+		fetchBranches.setContentAreaFilled(false);
+		fetchBranches.setOpaque(false);
+		ComponentUtils.deriveFont(fetchBranches, 12);
+		fetchBranches.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+		bar.add(fetchBranches);
+
+		JButton deleteBranch = L10N.button("dialog.vcs.branches_popup.delete_branch");
+		deleteBranch.setIcon(UIRES.get("16px.delete.gif"));
+		deleteBranch.setContentAreaFilled(false);
+		deleteBranch.setOpaque(false);
+		ComponentUtils.deriveFont(deleteBranch, 12);
+		deleteBranch.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+		bar.add(deleteBranch);
+
 		switchBranch.addActionListener(
 				e -> new BranchesPopup(WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace()),
-						workspacePanel.getMCreator()).show(switchBranch, 4, 20));
-
-		bar.add(switchBranch);
+						workspacePanel.getMCreator(), false).show(switchBranch, 4, 20));
+		fetchBranches.addActionListener(e -> {
+			try {
+				WorkspaceVCS workspaceVCS = WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace());
+				workspaceVCS.getGit().fetch().setRemote("origin").setRemoveDeletedRefs(true).setCredentialsProvider(
+						workspaceVCS.getCredentialsProvider(workspacePanel.getMCreator().getWorkspaceFolder(),
+								workspacePanel.getMCreator())).call();
+			} catch (GitAPIException ex) {
+				LOG.error("Failed to fetch branches", ex);
+			}
+		});
+		deleteBranch.addActionListener(
+				e -> new BranchesPopup(WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace()),
+						workspacePanel.getMCreator(), true).show(deleteBranch, 4, 20));
 
 		add("North", bar);
 
