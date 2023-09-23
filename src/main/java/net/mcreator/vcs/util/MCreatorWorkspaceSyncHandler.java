@@ -20,6 +20,7 @@ package net.mcreator.vcs.util;
 
 import net.mcreator.Launcher;
 import net.mcreator.element.GeneratableElement;
+import net.mcreator.generator.Generator;
 import net.mcreator.generator.GeneratorTemplate;
 import net.mcreator.io.FileIO;
 import net.mcreator.ui.MCreator;
@@ -35,6 +36,7 @@ import net.mcreator.vcs.util.diff.MergeHandle;
 import net.mcreator.vcs.util.diff.ResultSide;
 import net.mcreator.workspace.TooNewWorkspaceVerisonException;
 import net.mcreator.workspace.Workspace;
+import net.mcreator.workspace.WorkspaceFileManager;
 import net.mcreator.workspace.elements.FolderElement;
 import net.mcreator.workspace.elements.ModElement;
 import net.mcreator.workspace.elements.SoundElement;
@@ -74,10 +76,10 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 		// First we check if the remote has any changes on the workspace file
 		for (FileSyncHandle handle : handles) {
 			if (handle.getBasePath().equals(localWorkspace.getFileManager().getWorkspaceFile().getName())) {
-				remoteWorkspace = new Workspace.VirtualWorkspace(localWorkspace, new String(handle.getRemoteBytes()));
+				remoteWorkspace = getVirtualWorkspace(localWorkspace, new String(handle.getRemoteBytes()));
 				conflictsInWorkspaceFile = handle.isUnmerged();
 				if (conflictsInWorkspaceFile)
-					baseWorkspace = new Workspace.VirtualWorkspace(localWorkspace, new String(handle.getBaseBytes()));
+					baseWorkspace = getVirtualWorkspace(localWorkspace, new String(handle.getBaseBytes()));
 				unprocessedHandles.remove(handle);
 				break;
 			}
@@ -517,6 +519,20 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 		}
 
 		return required_user_action;
+	}
+
+	private Workspace getVirtualWorkspace(Workspace original, String workspaceString) throws IOException {
+		return new Workspace(null) {{
+			Workspace retval = WorkspaceFileManager.gson.fromJson(workspaceString, Workspace.class);
+			if (retval == null)
+				throw new IOException("Failed to parse workspace string");
+			this.loadStoredDataFrom(retval);
+			this.generator = new Generator(this);
+			this.generator.setGradleCache(this.generator.getGradleCache());
+			this.fileManager = original.getFileManager();
+			this.reloadModElements();
+			this.reloadFolderStructure();
+		}};
 	}
 
 	private boolean isVCSPathThisFile(Workspace workspace, String vcsPath, File file) throws IOException {
