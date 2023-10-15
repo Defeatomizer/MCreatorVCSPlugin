@@ -30,6 +30,7 @@ import net.mcreator.vcs.ui.actions.VCSActionRegistry;
 import net.mcreator.vcs.ui.actions.impl.SetupVCSAction;
 import net.mcreator.vcs.ui.component.BranchesPopup;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
+import net.mcreator.workspace.TerribleWorkspaceHacks;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.Git;
@@ -234,7 +235,7 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 							} catch (Exception ignored) {
 							}
 
-							workspacePanel.getMCreator().getWorkspace().reloadFromFS();
+							TerribleWorkspaceHacks.reloadFromFS(workspacePanel.getMCreator().getWorkspace());
 							workspacePanel.updateMods();
 							workspacePanel.getMCreator().actionRegistry.buildWorkspace.doAction();
 						}

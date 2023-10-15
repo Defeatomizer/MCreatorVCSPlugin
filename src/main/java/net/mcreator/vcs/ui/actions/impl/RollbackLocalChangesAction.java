@@ -28,6 +28,7 @@ import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
 import net.mcreator.vcs.util.GSONClone;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
+import net.mcreator.workspace.TerribleWorkspaceHacks;
 import net.mcreator.workspace.Workspace;
 import net.mcreator.workspace.settings.WorkspaceSettings;
 import net.mcreator.workspace.settings.WorkspaceSettingsChange;
@@ -58,7 +59,7 @@ public class RollbackLocalChangesAction extends VCSAction {
 					workspaceVCS.getGit().reset().setMode(ResetCommand.ResetType.HARD).call();
 
 					// possible refactor after sync start
-					mcreator.getWorkspace().reloadFromFS();
+					TerribleWorkspaceHacks.reloadFromFS(mcreator.getWorkspace());
 
 					// if version changed, switch the generator
 					String currentGenerator = localWorkspace.getWorkspaceSettings().getCurrentGenerator();

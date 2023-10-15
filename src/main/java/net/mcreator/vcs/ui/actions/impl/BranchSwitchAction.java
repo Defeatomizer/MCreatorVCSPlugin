@@ -28,6 +28,7 @@ import net.mcreator.ui.init.L10N;
 import net.mcreator.util.FilenameUtilsPatched;
 import net.mcreator.vcs.util.GSONClone;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
+import net.mcreator.workspace.TerribleWorkspaceHacks;
 import net.mcreator.workspace.Workspace;
 import net.mcreator.workspace.settings.WorkspaceSettings;
 import net.mcreator.workspace.settings.WorkspaceSettingsChange;
@@ -70,7 +71,7 @@ public class BranchSwitchAction {
 						.setName(FilenameUtilsPatched.getName(branchToSwitchTo)).call();
 
 				// possible refactor after sync start
-				mcreator.getWorkspace().reloadFromFS();
+				TerribleWorkspaceHacks.reloadFromFS(mcreator.getWorkspace());
 
 				// if version changed, switch the generator
 				if (!localWorkspace.getWorkspaceSettings().getCurrentGenerator()

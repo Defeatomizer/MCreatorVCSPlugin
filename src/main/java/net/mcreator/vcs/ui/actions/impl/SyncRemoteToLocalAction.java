@@ -31,6 +31,7 @@ import net.mcreator.vcs.util.GSONClone;
 import net.mcreator.vcs.util.ICustomSyncHandler;
 import net.mcreator.vcs.util.SyncTwoRefsWithMerge;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
+import net.mcreator.workspace.TerribleWorkspaceHacks;
 import net.mcreator.workspace.TooNewWorkspaceVerisonException;
 import net.mcreator.workspace.Workspace;
 import net.mcreator.workspace.settings.WorkspaceSettings;
@@ -121,7 +122,7 @@ public class SyncRemoteToLocalAction extends VCSAction {
 						git.stashApply().setStashRef(stash.getName()).call();
 
 					// possible refactor after sync start
-					actionRegistry.getMCreator().getWorkspace().reloadFromFS();
+					TerribleWorkspaceHacks.reloadFromFS(actionRegistry.getMCreator().getWorkspace());
 
 					localWorkspace = actionRegistry.getMCreator().getWorkspace();
 					if (!localWorkspace.getWorkspaceSettings().getCurrentGenerator()

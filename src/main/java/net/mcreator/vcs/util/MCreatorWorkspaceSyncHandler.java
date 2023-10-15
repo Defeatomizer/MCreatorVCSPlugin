@@ -24,9 +24,9 @@ import net.mcreator.generator.Generator;
 import net.mcreator.generator.GeneratorTemplate;
 import net.mcreator.io.FileIO;
 import net.mcreator.ui.MCreator;
+import net.mcreator.util.MCreatorVersionNumber;
 import net.mcreator.util.diff.DiffResult;
 import net.mcreator.util.diff.GSONCompare;
-import net.mcreator.util.MCreatorVersionNumber;
 import net.mcreator.util.diff.ListDiff;
 import net.mcreator.util.diff.MapDiff;
 import net.mcreator.vcs.ui.dialogs.VCSFileMergeDialog;
@@ -34,6 +34,7 @@ import net.mcreator.vcs.ui.dialogs.VCSWorkspaceMergeDialog;
 import net.mcreator.vcs.util.diff.DiffResultToBaseConflictFinder;
 import net.mcreator.vcs.util.diff.MergeHandle;
 import net.mcreator.vcs.util.diff.ResultSide;
+import net.mcreator.workspace.TerribleWorkspaceHacks;
 import net.mcreator.workspace.TooNewWorkspaceVerisonException;
 import net.mcreator.workspace.Workspace;
 import net.mcreator.workspace.WorkspaceFileManager;
@@ -375,8 +376,12 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 			if (conflictsInWorkspaceFile && workspaceSettingsMergeHandle != null)
 				baseWorkspace.setWorkspaceSettings(workspaceSettingsMergeHandle.getSelectedResult());
 
-			if (conflictsInWorkspaceFile && workspaceFoldersMergeHandle != null)
-				baseWorkspace.setFoldersRoot(workspaceFoldersMergeHandle.getSelectedResult());
+			if (conflictsInWorkspaceFile && workspaceFoldersMergeHandle != null) {
+				baseWorkspace.getFoldersRoot().getDirectFolderChildren()
+						.forEach(baseWorkspace.getFoldersRoot()::removeChild);
+				workspaceFoldersMergeHandle.getSelectedResult().getDirectFolderChildren()
+						.forEach(baseWorkspace.getFoldersRoot()::addChild);
+			}
 
 			for (MergeHandle<ModElement> modElementMergeHandle : conflictingModElements) {
 				if (conflictsInWorkspaceFile) {
@@ -385,7 +390,19 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 					} else if (modElementMergeHandle.getSelectedResultChangeType() == DiffEntry.ChangeType.DELETE) {
 						baseWorkspace.removeModElement(modElementMergeHandle.getSelectedResult());
 					} else if (modElementMergeHandle.getSelectedResultChangeType() == DiffEntry.ChangeType.MODIFY) {
-						baseWorkspace.updateModElement(modElementMergeHandle.getSelectedResult());
+						ModElement element = modElementMergeHandle.getSelectedResult();
+						for (ModElement el : baseWorkspace.getModElements()) {
+							if (el == element || el.getName().equals(element.getName())) {
+								el.loadDataFrom(element);
+
+								// update ME and MCItem icons
+								el.reloadElementIcon();
+								el.getMCItems().forEach(mcItem -> mcItem.icon.getImage().flush());
+
+								break; // there can be only one element with given name so no need to iterate further
+							}
+						}
+						baseWorkspace.markDirty();
 					}
 				}
 
@@ -419,8 +436,13 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 						baseWorkspace.removeVariableElement(variableElementMergeHandle.getSelectedResult());
 					} else if (variableElementMergeHandle.getSelectedResultChangeType()
 							== DiffEntry.ChangeType.MODIFY) {
-						baseWorkspace.updateVariableElement(variableElementMergeHandle.getSelectedResult(),
-								variableElementMergeHandle.getSelectedResult());
+						for (VariableElement el : baseWorkspace.getVariableElements()) {
+							if (el.getName().equals(variableElementMergeHandle.getSelectedResult().getName())) {
+								baseWorkspace.removeVariableElement(el);
+								baseWorkspace.addVariableElement(variableElementMergeHandle.getSelectedResult());
+							}
+						}
+						baseWorkspace.markDirty();
 					}
 				}
 
@@ -430,8 +452,13 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 					} else if (soundElementMergeHandle.getSelectedResultChangeType() == DiffEntry.ChangeType.DELETE) {
 						baseWorkspace.removeSoundElement(soundElementMergeHandle.getSelectedResult());
 					} else if (soundElementMergeHandle.getSelectedResultChangeType() == DiffEntry.ChangeType.MODIFY) {
-						baseWorkspace.updateSoundElement(soundElementMergeHandle.getSelectedResult(),
-								soundElementMergeHandle.getSelectedResult());
+						for (SoundElement el : baseWorkspace.getSoundElements()) {
+							if (el.getName().equals(soundElementMergeHandle.getSelectedResult().getName())) {
+								baseWorkspace.removeSoundElement(el);
+								baseWorkspace.addSoundElement(soundElementMergeHandle.getSelectedResult());
+							}
+						}
+						baseWorkspace.markDirty();
 					}
 				}
 
@@ -462,11 +489,11 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 		// if remote workspace was not null, we might have a merge so we set local workspace to after merge state
 		if (conflictsInWorkspaceFile && !dryRun) {
 			// local workspace is not at the same state as merged base workspace
-			localWorkspace.loadStoredDataFrom(baseWorkspace);
+			TerribleWorkspaceHacks.loadStoredDataFrom(localWorkspace, baseWorkspace);
 
 			// to be sure, we save workspace and load it back from file
 			localWorkspace.getFileManager().saveWorkspaceDirectlyAndWait();
-			localWorkspace.reloadFromFS();
+			TerribleWorkspaceHacks.reloadFromFS(localWorkspace);
 		}
 
 		// process workspace base files
@@ -526,7 +553,7 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 			Workspace retval = WorkspaceFileManager.gson.fromJson(workspaceString, Workspace.class);
 			if (retval == null)
 				throw new IOException("Failed to parse workspace string");
-			this.loadStoredDataFrom(retval);
+			TerribleWorkspaceHacks.loadStoredDataFrom(this, retval);
 			this.generator = new Generator(this);
 			this.generator.setGradleCache(this.generator.getGradleCache());
 			this.fileManager = original.getFileManager();
