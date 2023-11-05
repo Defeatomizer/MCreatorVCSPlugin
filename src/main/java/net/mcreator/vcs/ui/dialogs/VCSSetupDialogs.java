@@ -43,7 +43,9 @@ public class VCSSetupDialogs {
 		JPasswordField password = new JPasswordField(25);
 		JCheckBox savePassword = L10N.checkbox("dialog.vcs.setup_save_password");
 
-		remote.setEnabled(enableRemote);
+		remote.setEditable(enableRemote);
+		if (!enableRemote)
+			remote.setForeground(remote.getDisabledTextColor());
 
 		remote.setText(r);
 		username.setText(u);
@@ -70,8 +72,8 @@ public class VCSSetupDialogs {
 				L10N.t("dialog.vcs.setup_proceed"));
 
 		if (option == 0) {
-			VCSInfo info = new VCSInfo(remote.getText(), username.getText(), new String(password.getPassword()),
-					!savePassword.isSelected());
+			VCSInfo info = new VCSInfo(enableRemote ? remote.getText() : r, username.getText(),
+					new String(password.getPassword()), !savePassword.isSelected());
 			parent.setCursor(new Cursor(Cursor.WAIT_CURSOR));
 			boolean valid;
 			try {
