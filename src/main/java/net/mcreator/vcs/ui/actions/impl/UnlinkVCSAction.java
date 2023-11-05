@@ -19,11 +19,9 @@
 
 package net.mcreator.vcs.ui.actions.impl;
 
-import net.mcreator.io.FileIO;
 import net.mcreator.ui.action.ActionRegistry;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
-import org.eclipse.jgit.api.Git;
 
 import javax.swing.*;
 import java.io.File;
@@ -35,12 +33,11 @@ public class UnlinkVCSAction extends VCSAction {
 			int n = JOptionPane.showConfirmDialog(actionRegistry.getMCreator(), L10N.t("dialog.vcs.unlink.message"),
 					L10N.t("common.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if (n == JOptionPane.YES_OPTION) {
-				Git git = WorkspaceVCS.getVCSWorkspace(actionRegistry.getMCreator().getWorkspace()).getGit();
-				FileIO.deleteDir(git.getRepository().getDirectory());
 				new File(actionRegistry.getMCreator().getFolderManager().getWorkspaceCacheDir(), "vcsInfo").delete();
 				WorkspaceVCS.removeVCSWorkspace(actionRegistry.getMCreator().getWorkspace());
 				actionRegistry.getActions().stream().filter(action -> action instanceof VCSAction)
 						.forEach(action -> ((VCSAction) action).vcsStateChanged());
+				actionRegistry.getMCreator().mv.switchToVerticalTab("mods");
 			}
 		});
 	}

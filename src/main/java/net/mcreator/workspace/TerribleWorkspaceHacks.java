@@ -32,10 +32,9 @@ public class TerribleWorkspaceHacks {
 
 	public static void reloadFromFS(Workspace workspace) {
 		workspace.getModElementManager().invalidateCache();
-		workspace.getFileManager().getFolderManager();
 		loadStoredDataFrom(workspace, WorkspaceFileManager.gson.fromJson(
 				FileIO.readFileToString(workspace.getFileManager().getWorkspaceFile()), Workspace.class));
-		workspace.reloadModElements();
+		workspace.getModElements().forEach(e -> e.reinit(workspace));
 		workspace.reloadFolderStructure();
 		LOG.info("Reloaded current workspace from the workspace file");
 	}

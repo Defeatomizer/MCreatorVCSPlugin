@@ -126,7 +126,7 @@ public class BranchesPopup extends JPopupMenu {
 								CredentialsProvider credentialsProvider = workspaceVCS.getCredentialsProvider(
 										mcreator.getWorkspaceFolder(), mcreator);
 								git.reset().setMode(ResetCommand.ResetType.HARD).call();
-								git.branchDelete().setBranchNames(ref.getName()).call();
+								git.branchDelete().setBranchNames(ref.getName()).setForce(true).call();
 								git.fetch().setRemote("origin").setRemoveDeletedRefs(true)
 										.setCredentialsProvider(credentialsProvider).call();
 
