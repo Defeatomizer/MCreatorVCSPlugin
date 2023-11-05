@@ -32,7 +32,6 @@ import net.mcreator.vcs.util.ICustomSyncHandler;
 import net.mcreator.vcs.util.SyncTwoRefsWithMerge;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 import net.mcreator.workspace.TerribleWorkspaceHacks;
-import net.mcreator.workspace.TooNewWorkspaceVerisonException;
 import net.mcreator.workspace.Workspace;
 import net.mcreator.workspace.settings.WorkspaceSettings;
 import net.mcreator.workspace.settings.WorkspaceSettingsChange;
@@ -67,6 +66,7 @@ public class SyncRemoteToLocalAction extends VCSAction {
 					actionRegistry.getMCreator().getWorkspaceFolder(), actionRegistry.getMCreator());
 
 			ICustomSyncHandler mergeHandler = new MCreatorWorkspaceSyncHandler(actionRegistry.getMCreator());
+			RevCommit stash = null;
 
 			try {
 				// first we fetch remote changes
@@ -84,7 +84,7 @@ public class SyncRemoteToLocalAction extends VCSAction {
 				// stash local changes
 				git.rm().addFilepattern(".").call();
 				git.add().addFilepattern(".").call();
-				RevCommit stash = git.stashCreate().setIncludeUntracked(true).call();
+				stash = git.stashCreate().setIncludeUntracked(true).call();
 
 				ObjectId presyncPointer = stash;
 				if (presyncPointer == null) // if there are no changes, stash is null
@@ -93,20 +93,8 @@ public class SyncRemoteToLocalAction extends VCSAction {
 				ObjectId fetchHead = git.getRepository().findRef(Constants.FETCH_HEAD).getObjectId();
 
 				// next we do a dry run of the merge to see if we can silently merge workspaces
-				SyncTwoRefsWithMerge.SyncResult syncResult;
-				try {
-					syncResult = SyncTwoRefsWithMerge.sync(git, presyncPointer, fetchHead, mergeHandler, null, true);
-				} catch (TooNewWorkspaceVerisonException ex) {
-					// unstash the stash as we will not be using it
-					if (stash != null)
-						git.stashApply().setStashRef(stash.getName()).call();
-
-					JOptionPane.showMessageDialog(actionRegistry.getMCreator(),
-							L10N.t("dialog.vcs.error.remote_is_newer.message"),
-							L10N.t("dialog.vcs.error.remote_is_newer.title"), JOptionPane.ERROR_MESSAGE);
-					actionRegistry.getMCreator().setCursor(Cursor.getDefaultCursor());
-					return;
-				}
+				SyncTwoRefsWithMerge.SyncResult syncResult = SyncTwoRefsWithMerge.sync(git, presyncPointer, fetchHead,
+						mergeHandler, null, true);
 
 				// we can pull from remote only if custom merge handler was not required and no user interaction was required
 				if (!syncResult.requiredCustomMergeHandler() && !syncResult.requiredUserAction()) {
@@ -157,6 +145,14 @@ public class SyncRemoteToLocalAction extends VCSAction {
 							L10N.t("statusbar.vcs.pull.local_changes_not_synced"));
 				}
 			} catch (Exception ex) {
+				// unstash the stash as we will not be using it
+				if (stash != null) {
+					try {
+						git.stashApply().setStashRef(stash.getName()).call();
+					} catch (Exception ignored) {
+					}
+				}
+
 				LOG.error("Sync from remote failed", ex);
 				JOptionPane.showMessageDialog(actionRegistry.getMCreator(),
 						L10N.t("dialog.vcs.error.sync_failed.message", ex.getMessage()),

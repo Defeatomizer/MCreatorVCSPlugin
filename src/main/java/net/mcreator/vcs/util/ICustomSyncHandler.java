@@ -19,7 +19,6 @@
 
 package net.mcreator.vcs.util;
 
-import net.mcreator.workspace.TooNewWorkspaceVerisonException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
@@ -37,6 +36,6 @@ public interface ICustomSyncHandler {
 	 * @return true, if the merge required user interaction
 	 */
 	boolean handleSync(Git git, boolean hasMergeConflicts, List<FileSyncHandle> handles, boolean dryRun)
-			throws GitAPIException, IOException, TooNewWorkspaceVerisonException;
+			throws GitAPIException, IOException;
 
 }

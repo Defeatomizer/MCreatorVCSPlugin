@@ -19,7 +19,6 @@
 
 package net.mcreator.vcs.util;
 
-import net.mcreator.workspace.TooNewWorkspaceVerisonException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -41,7 +40,7 @@ public class SyncTwoRefsWithMerge {
 
 	public static SyncResult sync(Git git, @Nonnull ObjectId local, @Nonnull ObjectId remote,
 			ICustomSyncHandler customSyncHandler, @Nullable PreCustomMergeAction preCustomMergeAction, boolean dryRun)
-			throws GitAPIException, IOException, TooNewWorkspaceVerisonException {
+			throws GitAPIException, IOException {
 
 		RecursiveMerger merger = (RecursiveMerger) MergeStrategy.RECURSIVE.newMerger(git.getRepository(),
 				true); // in core -> dry run

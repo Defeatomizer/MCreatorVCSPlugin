@@ -35,7 +35,6 @@ import net.mcreator.vcs.util.diff.DiffResultToBaseConflictFinder;
 import net.mcreator.vcs.util.diff.MergeHandle;
 import net.mcreator.vcs.util.diff.ResultSide;
 import net.mcreator.workspace.TerribleWorkspaceHacks;
-import net.mcreator.workspace.TooNewWorkspaceVerisonException;
 import net.mcreator.workspace.Workspace;
 import net.mcreator.workspace.WorkspaceFileManager;
 import net.mcreator.workspace.elements.FolderElement;
@@ -63,7 +62,7 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 
 	@Override
 	public boolean handleSync(Git git, boolean hasMergeConflicts, List<FileSyncHandle> handles, boolean dryRun)
-			throws GitAPIException, IOException, TooNewWorkspaceVerisonException {
+			throws GitAPIException, IOException {
 		boolean required_user_action;
 
 		List<FileSyncHandle> unprocessedHandles = new ArrayList<>(handles);
@@ -90,7 +89,7 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 		if (remoteWorkspace != null)
 			if (remoteWorkspace.getMCreatorVersion() > Launcher.version.versionlong
 					&& !MCreatorVersionNumber.isBuildNumberDevelopment(remoteWorkspace.getMCreatorVersion()))
-				throw new TooNewWorkspaceVerisonException(Long.toString(remoteWorkspace.getMCreatorVersion()));
+				throw new IOException("Too new workspace version: " + remoteWorkspace.getMCreatorVersion());
 
 		Set<MergeHandle<ModElement>> conflictingModElements = new HashSet<>();
 		Map<ModElement, List<FileSyncHandle>> conflictingFilesOfModElementMap = new HashMap<>();

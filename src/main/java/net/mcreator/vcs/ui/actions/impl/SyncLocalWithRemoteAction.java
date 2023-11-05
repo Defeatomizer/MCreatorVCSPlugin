@@ -33,7 +33,6 @@ import net.mcreator.vcs.util.ICustomSyncHandler;
 import net.mcreator.vcs.util.SyncTwoRefsWithMerge;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 import net.mcreator.workspace.TerribleWorkspaceHacks;
-import net.mcreator.workspace.TooNewWorkspaceVerisonException;
 import net.mcreator.workspace.Workspace;
 import net.mcreator.workspace.settings.WorkspaceSettings;
 import net.mcreator.workspace.settings.WorkspaceSettingsChange;
@@ -110,63 +109,54 @@ public class SyncLocalWithRemoteAction extends VCSAction {
 											new ObjectIdRef.Unpeeled(Ref.Storage.LOOSE, fetchHead.getName(), fetchHead.copy())),
 									new ObjectIdRef.Unpeeled(Ref.Storage.LOOSE, head.getName(), head.copy()));
 
+							Workspace localWorkspace = actionRegistry.getMCreator().getWorkspace();
+							WorkspaceSettings preMergeSettings = GSONClone.deepClone(
+									localWorkspace.getWorkspaceSettings(), WorkspaceSettings.class);
+
+							// if custom merge handler was required
+							needsWorkspaceBuildAfter = SyncTwoRefsWithMerge.sync(git, head, fetchHead, mergeHandler,
+									() -> {
+										// fix in case if merge was not committed yet
+										if (git.getRepository().getRepositoryState()
+												== RepositoryState.MERGING_RESOLVED) {
+											git.rm().addFilepattern(".").call();
+											git.add().addFilepattern(".").call();
+											git.commit().setAll(true).setMessage(mergeMessage).call();
+										}
+
+										// we pull changes before custom merge handler tasks
+										git.pull().setRemote("origin").setCredentialsProvider(credentialsProvider)
+												.call();
+									}, false).requiredCustomMergeHandler();
+
+							// possible refactor after sync start
+							TerribleWorkspaceHacks.reloadFromFS(actionRegistry.getMCreator().getWorkspace());
+							if (!localWorkspace.getWorkspaceSettings().getCurrentGenerator()
+									.equals(preMergeSettings.getCurrentGenerator())) {
+								LOG.debug("Switching local workspace generator to "
+										+ localWorkspace.getWorkspaceSettings().getCurrentGenerator());
+
+								WorkspaceGeneratorSetup.cleanupGeneratorForSwitchTo(localWorkspace,
+										Generator.GENERATOR_CACHE.get(
+												localWorkspace.getWorkspaceSettings().getCurrentGenerator()));
+								localWorkspace.switchGenerator(
+										localWorkspace.getWorkspaceSettings().getCurrentGenerator());
+								WorkspaceGeneratorSetupDialog.runSetup(actionRegistry.getMCreator(), false);
+							}
+							WorkspaceSettingsChange workspaceSettingsChange = new WorkspaceSettingsChange(
+									preMergeSettings, localWorkspace.getWorkspaceSettings());
+							if (workspaceSettingsChange.refactorNeeded())
+								WorkspaceSettingsAction.refactorWorkspace(actionRegistry.getMCreator(),
+										workspaceSettingsChange);
+							// possible refactor after sync end
+
+							// we might need to make another commit to commit the merge changes
 							try {
-								Workspace localWorkspace = actionRegistry.getMCreator().getWorkspace();
-								WorkspaceSettings preMergeSettings = GSONClone.deepClone(
-										localWorkspace.getWorkspaceSettings(), WorkspaceSettings.class);
-
-								// if custom merge handler was required
-								needsWorkspaceBuildAfter = SyncTwoRefsWithMerge.sync(git, head, fetchHead, mergeHandler,
-										() -> {
-											// fix in case if merge was not committed yet
-											if (git.getRepository().getRepositoryState()
-													== RepositoryState.MERGING_RESOLVED) {
-												git.rm().addFilepattern(".").call();
-												git.add().addFilepattern(".").call();
-												git.commit().setAll(true).setMessage(mergeMessage).call();
-											}
-
-											// we pull changes before custom merge handler tasks
-											git.pull().setRemote("origin").setCredentialsProvider(credentialsProvider)
-													.call();
-										}, false).requiredCustomMergeHandler();
-
-								// possible refactor after sync start
-								TerribleWorkspaceHacks.reloadFromFS(actionRegistry.getMCreator().getWorkspace());
-								if (!localWorkspace.getWorkspaceSettings().getCurrentGenerator()
-										.equals(preMergeSettings.getCurrentGenerator())) {
-									LOG.debug("Switching local workspace generator to "
-											+ localWorkspace.getWorkspaceSettings().getCurrentGenerator());
-
-									WorkspaceGeneratorSetup.cleanupGeneratorForSwitchTo(localWorkspace,
-											Generator.GENERATOR_CACHE.get(
-													localWorkspace.getWorkspaceSettings().getCurrentGenerator()));
-									localWorkspace.switchGenerator(
-											localWorkspace.getWorkspaceSettings().getCurrentGenerator());
-									WorkspaceGeneratorSetupDialog.runSetup(actionRegistry.getMCreator(), false);
-								}
-								WorkspaceSettingsChange workspaceSettingsChange = new WorkspaceSettingsChange(
-										preMergeSettings, localWorkspace.getWorkspaceSettings());
-								if (workspaceSettingsChange.refactorNeeded())
-									WorkspaceSettingsAction.refactorWorkspace(actionRegistry.getMCreator(),
-											workspaceSettingsChange);
-								// possible refactor after sync end
-
-								// we might need to make another commit to commit the merge changes
-								try {
-									git.rm().addFilepattern(".").call();
-									git.add().addFilepattern(".").call();
-									git.commit().setAll(true).setAllowEmpty(false)
-											.setMessage("MCreator " + mergeMessage).call();
-								} catch (Exception ignored) {
-								}
-							} catch (TooNewWorkspaceVerisonException ex) {
-								JOptionPane.showMessageDialog(actionRegistry.getMCreator(),
-										L10N.t("dialog.vcs.sync_with_remote_workspace.too_new_error.message"),
-										L10N.t("dialog.vcs.sync_with_remote_workspace.too_new_error.title"),
-										JOptionPane.ERROR_MESSAGE);
-								actionRegistry.getMCreator().setCursor(Cursor.getDefaultCursor());
-								return;
+								git.rm().addFilepattern(".").call();
+								git.add().addFilepattern(".").call();
+								git.commit().setAll(true).setAllowEmpty(false)
+										.setMessage("MCreator " + mergeMessage).call();
+							} catch (Exception ignored) {
 							}
 
 						}
