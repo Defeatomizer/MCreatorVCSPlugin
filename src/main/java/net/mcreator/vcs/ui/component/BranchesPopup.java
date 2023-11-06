@@ -22,6 +22,7 @@ package net.mcreator.vcs.ui.component;
 import net.mcreator.minecraft.RegistryNameFixer;
 import net.mcreator.ui.MCreator;
 import net.mcreator.ui.init.L10N;
+import net.mcreator.util.FilenameUtilsPatched;
 import net.mcreator.vcs.ui.actions.impl.BranchSwitchAction;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 import org.apache.logging.log4j.LogManager;
@@ -31,6 +32,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.RefSpec;
@@ -81,8 +83,8 @@ public class BranchesPopup extends JPopupMenu {
 						}
 					}
 				});
-
 				addSeparator();
+
 				JMenuItem rename = new JMenuItem(L10N.t("dialog.vcs.branches_popup.rename_branch"));
 				add(rename);
 				rename.addActionListener(e -> {
@@ -127,6 +129,12 @@ public class BranchesPopup extends JPopupMenu {
 										mcreator.getWorkspaceFolder(), mcreator);
 								git.reset().setMode(ResetCommand.ResetType.HARD).call();
 								git.branchDelete().setBranchNames(ref.getName()).setForce(true).call();
+								if (ref.getName().startsWith(Constants.R_REMOTES)) {
+									String dest = Constants.R_HEADS + FilenameUtilsPatched.getName(ref.getName());
+									git.push().setRemote("origin")
+											.setRefSpecs(new RefSpec(":" + dest).setSource(null))
+											.setCredentialsProvider(credentialsProvider).call();
+								}
 								git.fetch().setRemote("origin").setRemoveDeletedRefs(true)
 										.setCredentialsProvider(credentialsProvider).call();
 

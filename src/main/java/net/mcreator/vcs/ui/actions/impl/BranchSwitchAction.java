@@ -34,13 +34,17 @@ import net.mcreator.workspace.settings.WorkspaceSettings;
 import net.mcreator.workspace.settings.WorkspaceSettingsChange;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.CredentialsProvider;
 
 import javax.swing.*;
+import java.io.IOException;
 
 public class BranchSwitchAction {
 
@@ -66,9 +70,21 @@ public class BranchSwitchAction {
 				}
 
 				git.reset().setMode(ResetCommand.ResetType.HARD).call();
-				git.checkout().setCreateBranch(!git.branchList().call().stream().map(Ref::getName).toList()
-								.contains("refs/heads/" + FilenameUtilsPatched.getName(branchToSwitchTo)))
-						.setName(FilenameUtilsPatched.getName(branchToSwitchTo)).call();
+
+				CheckoutCommand checkoutCommand = git.checkout();
+				checkoutCommand.setName(FilenameUtilsPatched.getName(branchToSwitchTo));
+				if (!git.branchList().call().stream().map(Ref::getName).toList()
+						.contains(Constants.R_HEADS + FilenameUtilsPatched.getName(branchToSwitchTo))) {
+					checkoutCommand.setCreateBranch(true);
+					Ref fetchHead = git.getRepository().findRef(Constants.FETCH_HEAD);
+					if (fetchHead != null && fetchHead.getObjectId() != null) {
+						for (RevCommit commit : git.log().add(fetchHead.getObjectId()).call()) {
+							checkoutCommand.setStartPoint(commit);
+							break;
+						}
+					}
+				}
+				checkoutCommand.call();
 
 				// possible refactor after sync start
 				TerribleWorkspaceHacks.reloadFromFS(mcreator.getWorkspace());
@@ -93,7 +109,7 @@ public class BranchSwitchAction {
 						FilenameUtilsPatched.getName(branchToSwitchTo)));
 
 				mcreator.mv.updateMods();
-			} catch (GitAPIException e) {
+			} catch (GitAPIException | IOException e) {
 				LOG.error("Failed to switch branch!", e);
 				JOptionPane.showMessageDialog(mcreator,
 						L10N.t("dialog.vcs.switch_branch_fail.message", branchToSwitchTo, e.getMessage()),
