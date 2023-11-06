@@ -21,6 +21,7 @@ package net.mcreator.vcs.workspace;
 
 import net.mcreator.io.FileIO;
 import net.mcreator.plugin.PluginLoader;
+import net.mcreator.ui.init.L10N;
 import net.mcreator.workspace.Workspace;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +35,7 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -77,7 +79,7 @@ public class WorkspaceVCS {
 		return new UsernamePasswordCredentialsProvider(info.getUsername(), info.getPassword(workspaceFolder, parent));
 	}
 
-	public static void initNewVCSWorkspace(Workspace workspace, VCSInfo vcsInfo) throws WorkspaceNotEmptyException {
+	public static boolean initNewVCSWorkspace(Workspace workspace, VCSInfo vcsInfo, Window parent) {
 		Git git = null;
 		try {
 			git = Git.init().setDirectory(workspace.getWorkspaceFolder()).call();
@@ -102,7 +104,9 @@ public class WorkspaceVCS {
 			if (git.getRepository().findRef(Constants.FETCH_HEAD) != null) {
 				if (git.getRepository().findRef(Constants.FETCH_HEAD).getObjectId() != null) {
 					closeVCS(git);
-					throw new WorkspaceNotEmptyException();
+					JOptionPane.showMessageDialog(parent, L10N.t("dialog.vcs.setup.workspace_folder_not_empty.message"),
+							L10N.t("dialog.vcs.setup.workspace_folder_not_empty.title"), JOptionPane.ERROR_MESSAGE);
+					return false;
 				}
 			}
 		} catch (GitAPIException | IOException | URISyntaxException e) {
@@ -119,6 +123,7 @@ public class WorkspaceVCS {
 		VCSInfo.saveToFile(vcsInfo, new File(workspace.getFolderManager().getWorkspaceCacheDir(), "vcsInfo"));
 
 		new WorkspaceVCS(workspace, vcsInfo);
+		return true;
 	}
 
 	public static boolean loadVCSWorkspace(Workspace workspace) {

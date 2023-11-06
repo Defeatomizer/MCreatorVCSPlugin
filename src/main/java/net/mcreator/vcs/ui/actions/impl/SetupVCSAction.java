@@ -25,10 +25,7 @@ import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
 import net.mcreator.vcs.ui.dialogs.VCSSetupDialogs;
 import net.mcreator.vcs.workspace.VCSInfo;
-import net.mcreator.vcs.workspace.WorkspaceNotEmptyException;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
-
-import javax.swing.*;
 
 public class SetupVCSAction extends VCSAction {
 
@@ -51,18 +48,12 @@ public class SetupVCSAction extends VCSAction {
 		if (WorkspaceVCS.getVCSWorkspace(mcreator.getWorkspace()) == null) {
 			VCSInfo vcsInfo = VCSSetupDialogs.getVCSInfoDialog(mcreator, L10N.t("dialog.vcs.setup.message"));
 			if (vcsInfo != null) {
-				try {
-					WorkspaceVCS.initNewVCSWorkspace(mcreator.getWorkspace(), vcsInfo);
+				if (WorkspaceVCS.initNewVCSWorkspace(mcreator.getWorkspace(), vcsInfo, mcreator)) {
 					mcreator.actionRegistry.getActions().stream()
 							.filter(action -> action instanceof VCSStateChangeListener)
 							.forEach(action -> ((VCSStateChangeListener) action).vcsStateChanged());
-				} catch (WorkspaceNotEmptyException e) {
-					JOptionPane.showMessageDialog(mcreator,
-							L10N.t("dialog.vcs.setup.workspace_folder_not_empty.message"),
-							L10N.t("dialog.vcs.setup.workspace_folder_not_empty.title"), JOptionPane.ERROR_MESSAGE);
-					return false;
+					return true;
 				}
-				return true;
 			}
 		} else {
 			return true;
