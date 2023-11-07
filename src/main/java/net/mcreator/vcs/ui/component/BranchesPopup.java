@@ -121,7 +121,7 @@ public class BranchesPopup extends JPopupMenu {
 				if (deletion) {
 					menuItem = new JMenuItem(ref.getName());
 					menuItem.addActionListener(e -> {
-						if (JOptionPane.OK_OPTION == JOptionPane.showConfirmDialog(mcreator,
+						if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(mcreator,
 								L10N.t("dialog.vcs.branches_popup.delete_branch.message", ref.getName()),
 								L10N.t("dialog.vcs.branches_popup.delete_branch.title"), JOptionPane.YES_NO_OPTION)) {
 							try {

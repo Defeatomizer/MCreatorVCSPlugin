@@ -84,6 +84,7 @@ public class SyncTwoRefsWithMerge {
 			fileSyncHandle.setUnmerged(unmergedPaths.contains(basePath) || unmergedPaths.contains(localPath));
 			if (baseObject != null)
 				fileSyncHandle.setBaseBytes(baseObject.getBytes());
+			fileSyncHandle.setLocalBytes(fileSyncHandle.getBaseBytes());
 			if (localObject != null)
 				fileSyncHandle.setLocalBytes(localObject.getBytes());
 			fileSyncHandles.add(fileSyncHandle);
@@ -122,10 +123,11 @@ public class SyncTwoRefsWithMerge {
 				if (baseObject != null)
 					fileSyncHandle.setBaseBytes(baseObject.getBytes());
 				fileSyncHandles.add(fileSyncHandle);
-			} else if (!fileSyncHandle.isUnmerged()) { // if not marked as unmrged yet, we might need to do it at this point
+			} else if (!fileSyncHandle.isUnmerged()) { // if not marked as unmerged yet, we might need to do it at this point
 				fileSyncHandle.setUnmerged(unmergedPaths.contains(basePath) || unmergedPaths.contains(remotePath));
 			}
 
+			fileSyncHandle.setRemoteBytes(fileSyncHandle.getBaseBytes());
 			if (remoteObject != null)
 				fileSyncHandle.setRemoteBytes(remoteObject.getBytes());
 			fileSyncHandle.setRemotePath(remotePath);

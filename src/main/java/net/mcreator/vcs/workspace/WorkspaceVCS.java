@@ -123,7 +123,7 @@ public class WorkspaceVCS {
 		VCSInfo.saveToFile(vcsInfo, new File(workspace.getFolderManager().getWorkspaceCacheDir(), "vcsInfo"));
 
 		new WorkspaceVCS(workspace, vcsInfo);
-		return true;
+		return workspaces.containsKey(workspace.getWorkspaceFolder());
 	}
 
 	public static boolean loadVCSWorkspace(Workspace workspace) {
