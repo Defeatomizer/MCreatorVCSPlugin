@@ -21,6 +21,7 @@ package net.mcreator.vcs.ui.workspace;
 
 import net.mcreator.ui.component.TransparentToolBar;
 import net.mcreator.ui.component.util.ComponentUtils;
+import net.mcreator.ui.dialogs.ProgressDialog;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
 import net.mcreator.ui.laf.SlickDarkScrollBarUI;
@@ -29,6 +30,7 @@ import net.mcreator.ui.workspace.WorkspacePanel;
 import net.mcreator.vcs.ui.actions.VCSActionRegistry;
 import net.mcreator.vcs.ui.actions.impl.SetupVCSAction;
 import net.mcreator.vcs.ui.component.BranchesPopup;
+import net.mcreator.vcs.util.DialogProgressMonitor;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 import net.mcreator.workspace.TerribleWorkspaceHacks;
 import org.apache.logging.log4j.LogManager;
@@ -117,10 +119,14 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 		fetchBranches.addActionListener(e -> {
 			try {
 				WorkspaceVCS workspaceVCS = WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace());
-				workspaceVCS.getGit().fetch().setRemote("origin").setRemoveDeletedRefs(true).setCredentialsProvider(
-						workspaceVCS.getCredentialsProvider(workspacePanel.getMCreator().getWorkspaceFolder(),
-								workspacePanel.getMCreator())).call();
-			} catch (GitAPIException ex) {
+				DialogProgressMonitor monitor = new DialogProgressMonitor(workspacePanel.getMCreator(),
+						L10N.t("dialog.vcs.branches_popup.fetch_branches"));
+				DialogProgressMonitor.runTask(monitor, "WorkspacePanelVCS-FetchBranches",
+						() -> workspaceVCS.getGit().fetch().setRemote("origin").setRemoveDeletedRefs(true)
+								.setCredentialsProvider(workspaceVCS.getCredentialsProvider(
+										workspacePanel.getMCreator().getWorkspaceFolder(),
+										workspacePanel.getMCreator())).setProgressMonitor(monitor).call());
+			} catch (Exception ex) {
 				LOG.error("Failed to fetch branches", ex);
 			}
 		});
@@ -192,7 +198,13 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 
 		WorkspaceVCS workspaceVCS = WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace());
 		String shortCommitId = commits.getValueAt(row, 0).toString();
-		if (shortCommitId != null && workspaceVCS != null) {
+		if (shortCommitId == null || workspaceVCS == null)
+			return;
+
+		ProgressDialog pd = new ProgressDialog(workspacePanel.getMCreator(),
+				L10N.t("workspace.vcs.jump_to_selected_commit"));
+		new Thread(() -> {
+			ProgressDialog.ProgressUnit pu = null;
 			try {
 				Git git = workspaceVCS.getGit();
 				for (RevCommit commit : git.log().add(git.getRepository().resolve(git.getRepository().getFullBranch()))
@@ -207,31 +219,45 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 
 						if (option == 0) {
 							// track all so they can be stashed properly
+							pd.addProgressUnit(pu = new ProgressDialog.ProgressUnit(
+									L10N.t("workspace.vcs.jump_to_selected_commit.stashing")));
 							git.rm().addFilepattern(".").call();
 							git.add().addFilepattern(".").call();
 
 							// remove local changes attempt 1
 							git.stashCreate().call();
 							git.stashDrop().call();
+							pu.markStateOk();
 
 							ObjectId currentBranchHead = git.getRepository().resolve(Constants.HEAD);
 							String oldBranch = git.getRepository().getFullBranch();
 
+							pd.addProgressUnit(pu = new ProgressDialog.ProgressUnit(
+									L10N.t("workspace.vcs.jump_to_selected_commit.jumping")));
 							git.checkout().setName(commit.getName()).setStartPoint(commit.getName()).call();
-							git.checkout().setName("tmpHistoryBranch").setCreateBranch(true).call();
+							pu.setPercent(17);
+							git.checkout().setName("tmpHistoryBranch" + commit.getName()).setCreateBranch(true).call();
+							pu.setPercent(33);
 							String branchName = git.getRepository().getFullBranch();
 							git.merge().setStrategy(MergeStrategy.OURS).include(currentBranchHead)
 									.setFastForward(MergeCommand.FastForwardMode.NO_FF)
 									.setMessage("Jump back to commit " + commit.getName()).call();
+							pu.setPercent(50);
 							git.checkout().setName(oldBranch).call();
+							pu.setPercent(67);
 							git.merge().include(git.getRepository().resolve(branchName)).call();
+							pu.setPercent(83);
 							git.branchDelete().setBranchNames(branchName).call();
+							pu.markStateOk();
 
 							// we might need to make another commit to commit the merge changes
 							try {
+								pd.addProgressUnit(pu = new ProgressDialog.ProgressUnit(
+										L10N.t("workspace.vcs.jump_to_selected_commit.cleaning")));
 								git.rm().addFilepattern(".").call();
 								git.add().addFilepattern(".").call();
 								git.commit().setAll(true).setAllowEmpty(false).setMessage("Jump cleanup commit").call();
+								pu.markStateOk();
 							} catch (Exception ignored) {
 							}
 
@@ -245,8 +271,12 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 				}
 			} catch (GitAPIException | IOException e) {
 				LOG.error("Checkout failed!", e);
+				if (pu != null)
+					pu.markStateError();
 			}
-		}
+			pd.hideDialog();
+		}, "JumpToCommit").start();
+		pd.setVisible(true);
 	}
 
 	@Override public boolean canSwitchToSection() {

@@ -24,6 +24,7 @@ import net.mcreator.ui.MCreator;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.util.FilenameUtilsPatched;
 import net.mcreator.vcs.ui.actions.impl.BranchSwitchAction;
+import net.mcreator.vcs.util.DialogProgressMonitor;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -127,19 +128,25 @@ public class BranchesPopup extends JPopupMenu {
 							try {
 								CredentialsProvider credentialsProvider = workspaceVCS.getCredentialsProvider(
 										mcreator.getWorkspaceFolder(), mcreator);
-								git.reset().setMode(ResetCommand.ResetType.HARD).call();
-								git.branchDelete().setBranchNames(ref.getName()).setForce(true).call();
-								if (ref.getName().startsWith(Constants.R_REMOTES)) {
-									String dest = Constants.R_HEADS + FilenameUtilsPatched.getName(ref.getName());
-									git.push().setRemote("origin")
-											.setRefSpecs(new RefSpec(":" + dest).setSource(null))
-											.setCredentialsProvider(credentialsProvider).call();
-								}
-								git.fetch().setRemote("origin").setRemoveDeletedRefs(true)
-										.setCredentialsProvider(credentialsProvider).call();
+								DialogProgressMonitor monitor = new DialogProgressMonitor(mcreator,
+										L10N.t("dialog.vcs.branches_popup.delete_branch"));
+								DialogProgressMonitor.runTask(monitor, "BranchesPopup-DeleteBranch", () -> {
+									git.reset().setMode(ResetCommand.ResetType.HARD).call();
+									git.branchDelete().setBranchNames(ref.getName()).setForce(true).call();
+									if (ref.getName().startsWith(Constants.R_REMOTES)) {
+										String dest = Constants.R_HEADS + FilenameUtilsPatched.getName(ref.getName());
+										git.push().setRemote("origin")
+												.setRefSpecs(new RefSpec(":" + dest).setSource(null))
+												.setCredentialsProvider(credentialsProvider).setProgressMonitor(monitor)
+												.call();
+									}
+									return git.fetch().setRemote("origin").setRemoveDeletedRefs(true)
+											.setCredentialsProvider(credentialsProvider).setProgressMonitor(monitor)
+											.call();
+								});
 
 								mcreator.mv.updateMods();
-							} catch (GitAPIException er) {
+							} catch (Exception er) {
 								LOG.error("Failed to delete branch", er);
 							}
 						}

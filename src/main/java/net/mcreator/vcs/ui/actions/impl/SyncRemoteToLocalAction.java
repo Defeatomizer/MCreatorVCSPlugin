@@ -26,10 +26,7 @@ import net.mcreator.ui.action.impl.workspace.WorkspaceSettingsAction;
 import net.mcreator.ui.dialogs.workspace.WorkspaceGeneratorSetupDialog;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
-import net.mcreator.vcs.util.MCreatorWorkspaceSyncHandler;
-import net.mcreator.vcs.util.GSONClone;
-import net.mcreator.vcs.util.ICustomSyncHandler;
-import net.mcreator.vcs.util.SyncTwoRefsWithMerge;
+import net.mcreator.vcs.util.*;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 import net.mcreator.workspace.TerribleWorkspaceHacks;
 import net.mcreator.workspace.Workspace;
@@ -64,13 +61,17 @@ public class SyncRemoteToLocalAction extends VCSAction {
 
 			CredentialsProvider credentialsProvider = workspaceVCS.getCredentialsProvider(
 					actionRegistry.getMCreator().getWorkspaceFolder(), actionRegistry.getMCreator());
+			DialogProgressMonitor monitor = new DialogProgressMonitor(actionRegistry.getMCreator(),
+					L10N.t("action.vcs.pull.title"));
 
 			ICustomSyncHandler mergeHandler = new MCreatorWorkspaceSyncHandler(actionRegistry.getMCreator());
 			RevCommit stash = null;
 
 			try {
 				// first we fetch remote changes
-				git.fetch().setRemote("origin").setCredentialsProvider(credentialsProvider).call();
+				DialogProgressMonitor.runTask(monitor, "SyncRemoteToLocal-Fetch",
+						() -> git.fetch().setRemote("origin").setCredentialsProvider(credentialsProvider)
+								.setProgressMonitor(monitor).call());
 
 				// check if we fetched anything
 				if (git.getRepository().findRef(Constants.FETCH_HEAD) == null
@@ -103,7 +104,9 @@ public class SyncRemoteToLocalAction extends VCSAction {
 							WorkspaceSettings.class);
 
 					// pull changes from remote before unstashing
-					git.pull().setRemote("origin").setCredentialsProvider(credentialsProvider).call();
+					DialogProgressMonitor.runTask(monitor, "SyncRemoteToLocal",
+							() -> git.pull().setRemote("origin").setCredentialsProvider(credentialsProvider)
+									.setProgressMonitor(monitor).call());
 
 					// unstash local changes
 					if (stash != null)

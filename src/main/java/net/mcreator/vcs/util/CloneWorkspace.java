@@ -19,9 +19,9 @@
 
 package net.mcreator.vcs.util;
 
+import net.mcreator.ui.init.L10N;
 import net.mcreator.vcs.workspace.VCSInfo;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.awt.*;
@@ -29,12 +29,17 @@ import java.io.File;
 
 public class CloneWorkspace {
 
-	public static void cloneWorkspace(Window parent, VCSInfo vcsInfo, File folderInto) throws GitAPIException {
-		try (Git ignored = Git.cloneRepository().setURI(vcsInfo.getRemote()).setDirectory(folderInto)
-				.setCredentialsProvider(new UsernamePasswordCredentialsProvider(vcsInfo.getUsername(),
-						vcsInfo.getPassword(folderInto, parent))).call()) {
-			VCSInfo.saveToFile(vcsInfo, new File(folderInto, "/.mcreator/vcsInfo"));
-		}
+	public static void cloneWorkspace(Window parent, VCSInfo vcsInfo, File folderInto) throws Exception {
+		DialogProgressMonitor monitor = new DialogProgressMonitor(parent,
+				L10N.t("dialog.workspace_selector.clone.title"));
+		DialogProgressMonitor.runTask(monitor, "CloneWorkspace", () -> {
+			try (Git ignored = Git.cloneRepository().setURI(vcsInfo.getRemote()).setDirectory(folderInto)
+					.setCredentialsProvider(new UsernamePasswordCredentialsProvider(vcsInfo.getUsername(),
+							vcsInfo.getPassword(folderInto, parent))).setProgressMonitor(monitor).call()) {
+				VCSInfo.saveToFile(vcsInfo, new File(folderInto, "/.mcreator/vcsInfo"));
+			}
+			return null;
+		});
 	}
 
 }

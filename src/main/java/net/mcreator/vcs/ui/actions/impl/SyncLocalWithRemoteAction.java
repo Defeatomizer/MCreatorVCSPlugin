@@ -26,11 +26,8 @@ import net.mcreator.ui.action.impl.workspace.WorkspaceSettingsAction;
 import net.mcreator.ui.dialogs.workspace.WorkspaceGeneratorSetupDialog;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
-import net.mcreator.vcs.util.MCreatorWorkspaceSyncHandler;
 import net.mcreator.vcs.ui.dialogs.VCSCommitDialog;
-import net.mcreator.vcs.util.GSONClone;
-import net.mcreator.vcs.util.ICustomSyncHandler;
-import net.mcreator.vcs.util.SyncTwoRefsWithMerge;
+import net.mcreator.vcs.util.*;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 import net.mcreator.workspace.TerribleWorkspaceHacks;
 import net.mcreator.workspace.Workspace;
@@ -71,6 +68,8 @@ public class SyncLocalWithRemoteAction extends VCSAction {
 
 			CredentialsProvider credentialsProvider = workspaceVCS.getCredentialsProvider(
 					actionRegistry.getMCreator().getWorkspaceFolder(), actionRegistry.getMCreator());
+			DialogProgressMonitor monitor = new DialogProgressMonitor(actionRegistry.getMCreator(),
+					L10N.t("action.vcs.sync_with_remote_workspace.title"));
 
 			ICustomSyncHandler mergeHandler = new MCreatorWorkspaceSyncHandler(actionRegistry.getMCreator());
 
@@ -100,7 +99,9 @@ public class SyncLocalWithRemoteAction extends VCSAction {
 						commitCommand.call();
 
 						// next we check if there are any commits on the remote
-						git.fetch().setRemote("origin").setCredentialsProvider(credentialsProvider).call();
+						DialogProgressMonitor.runTask(monitor, "SyncLocalWithRemote-Fetch",
+								() -> git.fetch().setRemote("origin").setCredentialsProvider(credentialsProvider)
+										.setProgressMonitor(monitor).call());
 						if (git.getRepository().findRef(Constants.FETCH_HEAD) != null) {
 							ObjectId head = git.getRepository().resolve(Constants.HEAD);
 							ObjectId fetchHead = git.getRepository().findRef(Constants.FETCH_HEAD).getObjectId();
@@ -114,8 +115,9 @@ public class SyncLocalWithRemoteAction extends VCSAction {
 									localWorkspace.getWorkspaceSettings(), WorkspaceSettings.class);
 
 							// if custom merge handler was required
-							needsWorkspaceBuildAfter = SyncTwoRefsWithMerge.sync(git, head, fetchHead, mergeHandler,
-									() -> {
+							needsWorkspaceBuildAfter = DialogProgressMonitor.runTask(monitor,
+									"SyncLocalWithRemote-ResolveConflict",
+									() -> SyncTwoRefsWithMerge.sync(git, head, fetchHead, mergeHandler, () -> {
 										// fix in case if merge was not committed yet
 										if (git.getRepository().getRepositoryState()
 												== RepositoryState.MERGING_RESOLVED) {
@@ -126,8 +128,8 @@ public class SyncLocalWithRemoteAction extends VCSAction {
 
 										// we pull changes before custom merge handler tasks
 										git.pull().setRemote("origin").setCredentialsProvider(credentialsProvider)
-												.call();
-									}, false).requiredCustomMergeHandler();
+												.setProgressMonitor(monitor).call();
+									}, false).requiredCustomMergeHandler());
 
 							// possible refactor after sync start
 							TerribleWorkspaceHacks.reloadFromFS(actionRegistry.getMCreator().getWorkspace());
@@ -176,10 +178,13 @@ public class SyncLocalWithRemoteAction extends VCSAction {
 				BranchTrackingStatus trackingStatus = BranchTrackingStatus.of(git.getRepository(),
 						git.getRepository().getFullBranch());
 
-				PushCommand pushCommand = git.push();
-				pushCommand.setCredentialsProvider(credentialsProvider);
-				pushCommand.setRemote("origin").add(git.getRepository().getBranch());
-				pushCommand.call();
+				DialogProgressMonitor.runTask(monitor, "SyncLocalWithRemote", () -> {
+					PushCommand pushCommand = git.push();
+					pushCommand.setCredentialsProvider(credentialsProvider);
+					pushCommand.setProgressMonitor(monitor);
+					pushCommand.setRemote("origin").add(git.getRepository().getBranch());
+					return pushCommand.call();
+				});
 
 				if (trackingStatus != null) {
 					actionRegistry.getMCreator().statusBar.setPersistentMessage(

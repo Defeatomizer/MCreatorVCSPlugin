@@ -26,6 +26,7 @@ import net.mcreator.ui.action.impl.workspace.WorkspaceSettingsAction;
 import net.mcreator.ui.dialogs.workspace.WorkspaceGeneratorSetupDialog;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.util.FilenameUtilsPatched;
+import net.mcreator.vcs.util.DialogProgressMonitor;
 import net.mcreator.vcs.util.GSONClone;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 import net.mcreator.workspace.TerribleWorkspaceHacks;
@@ -65,7 +66,11 @@ public class BranchSwitchAction {
 						WorkspaceSettings.class);
 
 				try { // first try to fetch remote changes
-					git.fetch().setRemote("origin").setCredentialsProvider(credentialsProvider).call();
+					DialogProgressMonitor monitor = new DialogProgressMonitor(mcreator,
+							L10N.t("dialog.vcs.switch_branch.title"));
+					DialogProgressMonitor.runTask(monitor, "BranchSwitchAction-Fetch",
+							() -> git.fetch().setRemote("origin").setCredentialsProvider(credentialsProvider)
+									.setProgressMonitor(monitor).call());
 				} catch (Exception ignored) {
 				}
 
