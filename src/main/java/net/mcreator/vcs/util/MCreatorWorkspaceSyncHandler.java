@@ -76,17 +76,21 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 		// First we check if the remote has any changes on the workspace file
 		for (FileSyncHandle handle : handles) {
 			if (handle.getBasePath().equals(localWorkspace.getFileManager().getWorkspaceFile().getName())) {
-				remoteWorkspace = getVirtualWorkspace(localWorkspace, new String(handle.getRemoteBytes()));
-				conflictsInWorkspaceFile = handle.isUnmerged();
+				conflictsInWorkspaceFile =
+						handle.isUnmerged() && handle.getChangeTypeRelativeToRemote() != DiffEntry.ChangeType.DELETE;
 				if (conflictsInWorkspaceFile)
 					baseWorkspace = getVirtualWorkspace(localWorkspace, new String(handle.getBaseBytes()));
+				if (handle.getChangeTypeRelativeToRemote() != DiffEntry.ChangeType.DELETE)
+					remoteWorkspace = getVirtualWorkspace(localWorkspace, new String(handle.getRemoteBytes()));
+				else
+					remoteWorkspace = baseWorkspace;
 				unprocessedHandles.remove(handle);
 				break;
 			}
 		}
 
 		// remote workspace could be newer than the latest workspace version supported by this MCreator
-		if (remoteWorkspace != null)
+		if (remoteWorkspace != null && remoteWorkspace != baseWorkspace)
 			if (remoteWorkspace.getMCreatorVersion() > Launcher.version.versionlong
 					&& !MCreatorVersionNumber.isBuildNumberDevelopment(remoteWorkspace.getMCreatorVersion()))
 				throw new IOException("Too new workspace version: " + remoteWorkspace.getMCreatorVersion());
