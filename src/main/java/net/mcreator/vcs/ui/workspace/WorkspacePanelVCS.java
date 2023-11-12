@@ -27,6 +27,7 @@ import net.mcreator.ui.init.UIRES;
 import net.mcreator.ui.laf.SlickDarkScrollBarUI;
 import net.mcreator.ui.workspace.AbstractWorkspacePanel;
 import net.mcreator.ui.workspace.WorkspacePanel;
+import net.mcreator.util.FilenameUtilsPatched;
 import net.mcreator.vcs.ui.actions.VCSActionRegistry;
 import net.mcreator.vcs.ui.actions.impl.SetupVCSAction;
 import net.mcreator.vcs.ui.component.BranchesPopup;
@@ -37,12 +38,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeCommand;
+import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.RefSpec;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -113,12 +117,11 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 		deleteBranch.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
 		bar.add(deleteBranch);
 
+		WorkspaceVCS workspaceVCS = WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace());
 		switchBranch.addActionListener(
-				e -> new BranchesPopup(WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace()),
-						workspacePanel.getMCreator(), false).show(switchBranch, 4, 20));
+				e -> new BranchesPopup(workspaceVCS, workspacePanel.getMCreator(), null).show(switchBranch, 4, 20));
 		fetchBranches.addActionListener(e -> {
 			try {
-				WorkspaceVCS workspaceVCS = WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace());
 				DialogProgressMonitor monitor = new DialogProgressMonitor(workspacePanel.getMCreator(),
 						L10N.t("dialog.vcs.branches_popup.fetch_branches"));
 				DialogProgressMonitor.runTask(monitor, "WorkspacePanelVCS-FetchBranches",
@@ -130,9 +133,33 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 				LOG.error("Failed to fetch branches", ex);
 			}
 		});
-		deleteBranch.addActionListener(
-				e -> new BranchesPopup(WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace()),
-						workspacePanel.getMCreator(), true).show(deleteBranch, 4, 20));
+		deleteBranch.addActionListener(e -> new BranchesPopup(workspaceVCS, workspacePanel.getMCreator(), ref -> {
+			Git git = workspaceVCS.getGit();
+			if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(workspacePanel.getMCreator(),
+					L10N.t("dialog.vcs.branches_popup.delete_branch.message", ref.getName()),
+					L10N.t("dialog.vcs.branches_popup.delete_branch.title"), JOptionPane.YES_NO_OPTION)) {
+				try {
+					CredentialsProvider credentialsProvider = workspaceVCS.getCredentialsProvider(
+							workspacePanel.getMCreator().getWorkspaceFolder(), workspacePanel.getMCreator());
+					DialogProgressMonitor monitor = new DialogProgressMonitor(workspacePanel.getMCreator(),
+							L10N.t("dialog.vcs.branches_popup.delete_branch"));
+					DialogProgressMonitor.runTask(monitor, "BranchesPopup-DeleteBranch", () -> {
+						git.reset().setMode(ResetCommand.ResetType.HARD).call();
+						git.branchDelete().setBranchNames(ref.getName()).setForce(true).call();
+						if (ref.getName().startsWith(Constants.R_REMOTES)) {
+							String dest = Constants.R_HEADS + FilenameUtilsPatched.getName(ref.getName());
+							git.push().setRemote("origin").setRefSpecs(new RefSpec(":" + dest).setSource(null))
+									.setCredentialsProvider(credentialsProvider).setProgressMonitor(monitor).call();
+						}
+						return git.fetch().setRemote("origin").setRemoveDeletedRefs(true)
+								.setCredentialsProvider(credentialsProvider).setProgressMonitor(monitor).call();
+					});
+					workspacePanel.getMCreator().mv.updateMods();
+				} catch (Exception er) {
+					LOG.error("Failed to delete branch", er);
+				}
+			}
+		}).show(deleteBranch, 4, 20));
 
 		add("North", bar);
 

@@ -22,35 +22,31 @@ package net.mcreator.vcs.ui.component;
 import net.mcreator.minecraft.RegistryNameFixer;
 import net.mcreator.ui.MCreator;
 import net.mcreator.ui.init.L10N;
-import net.mcreator.util.FilenameUtilsPatched;
 import net.mcreator.vcs.ui.actions.impl.BranchSwitchAction;
-import net.mcreator.vcs.util.DialogProgressMonitor;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jgit.api.CreateBranchCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
-import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.RefSpec;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class BranchesPopup extends JPopupMenu {
 
 	private static final Logger LOG = LogManager.getLogger("Branches Popup");
 
-	public BranchesPopup(WorkspaceVCS workspaceVCS, MCreator mcreator, boolean deletion) {
+	public BranchesPopup(WorkspaceVCS workspaceVCS, MCreator mcreator, Consumer<Ref> refHandler) {
 		try {
 			Git git = workspaceVCS.getGit();
 
-			if (!deletion) {
+			if (refHandler == null) {
 				JMenuItem newBranch = new JMenuItem(L10N.t("dialog.vcs.branches_popup.new_branch"));
 				add(newBranch);
 				newBranch.addActionListener(e -> {
@@ -115,42 +111,13 @@ public class BranchesPopup extends JPopupMenu {
 			List<Ref> refs = git.branchList().setListMode(ListBranchCommand.ListMode.ALL).call();
 
 			for (Ref ref : refs) {
-				if (deletion && git.getRepository().getFullBranch().equals(ref.getName()))
+				if (refHandler != null && git.getRepository().getFullBranch().equals(ref.getName()))
 					continue;
 
 				JMenuItem menuItem;
-				if (deletion) {
+				if (refHandler != null) {
 					menuItem = new JMenuItem(ref.getName());
-					menuItem.addActionListener(e -> {
-						if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(mcreator,
-								L10N.t("dialog.vcs.branches_popup.delete_branch.message", ref.getName()),
-								L10N.t("dialog.vcs.branches_popup.delete_branch.title"), JOptionPane.YES_NO_OPTION)) {
-							try {
-								CredentialsProvider credentialsProvider = workspaceVCS.getCredentialsProvider(
-										mcreator.getWorkspaceFolder(), mcreator);
-								DialogProgressMonitor monitor = new DialogProgressMonitor(mcreator,
-										L10N.t("dialog.vcs.branches_popup.delete_branch"));
-								DialogProgressMonitor.runTask(monitor, "BranchesPopup-DeleteBranch", () -> {
-									git.reset().setMode(ResetCommand.ResetType.HARD).call();
-									git.branchDelete().setBranchNames(ref.getName()).setForce(true).call();
-									if (ref.getName().startsWith(Constants.R_REMOTES)) {
-										String dest = Constants.R_HEADS + FilenameUtilsPatched.getName(ref.getName());
-										git.push().setRemote("origin")
-												.setRefSpecs(new RefSpec(":" + dest).setSource(null))
-												.setCredentialsProvider(credentialsProvider).setProgressMonitor(monitor)
-												.call();
-									}
-									return git.fetch().setRemote("origin").setRemoveDeletedRefs(true)
-											.setCredentialsProvider(credentialsProvider).setProgressMonitor(monitor)
-											.call();
-								});
-
-								mcreator.mv.updateMods();
-							} catch (Exception er) {
-								LOG.error("Failed to delete branch", er);
-							}
-						}
-					});
+					menuItem.addActionListener(e -> refHandler.accept(ref));
 				} else {
 					menuItem = new JRadioButtonMenuItem(ref.getName());
 					if (git.getRepository().getFullBranch().equals(ref.getName())) {
