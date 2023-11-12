@@ -67,7 +67,7 @@ public class LocalChangesPanel extends JPanel {
 
 		JScrollPane cscroll = new JScrollPane(changelist);
 		cscroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-		cscroll.setPreferredSize(new Dimension(500, 70));
+		cscroll.setPreferredSize(new Dimension(500, 150));
 
 		add("North", changes);
 		add("Center", cscroll);
