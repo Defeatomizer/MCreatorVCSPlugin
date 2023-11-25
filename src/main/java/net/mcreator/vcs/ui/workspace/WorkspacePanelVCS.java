@@ -25,6 +25,7 @@ import net.mcreator.ui.dialogs.ProgressDialog;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
 import net.mcreator.ui.laf.SlickDarkScrollBarUI;
+import net.mcreator.ui.laf.themes.Theme;
 import net.mcreator.ui.workspace.AbstractWorkspacePanel;
 import net.mcreator.ui.workspace.WorkspacePanel;
 import net.mcreator.util.FilenameUtilsPatched;
@@ -154,7 +155,7 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 						return git.fetch().setRemote("origin").setRemoveDeletedRefs(true)
 								.setCredentialsProvider(credentialsProvider).setProgressMonitor(monitor).call();
 					});
-					workspacePanel.getMCreator().mv.updateMods();
+					workspacePanel.getMCreator().mv.reloadElementsInCurrentTab();
 				} catch (Exception er) {
 					LOG.error("Failed to delete branch", er);
 				}
@@ -173,12 +174,12 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 
 		sorter = new TableRowSorter<>(commits.getModel());
 		commits.setRowSorter(sorter);
-		commits.setBackground((Color) UIManager.get("MCreatorLAF.DARK_ACCENT"));
-		commits.setSelectionBackground((Color) UIManager.get("MCreatorLAF.LIGHT_ACCENT"));
-		commits.setForeground((Color) UIManager.get("MCreatorLAF.BRIGHT_COLOR"));
-		commits.setSelectionForeground((Color) UIManager.get("MCreatorLAF.BRIGHT_COLOR"));
+		commits.setBackground(Theme.current().getBackgroundColor());
+		commits.setSelectionBackground(Theme.current().getAltBackgroundColor());
+		commits.setForeground(Theme.current().getForegroundColor());
+		commits.setSelectionForeground(Theme.current().getForegroundColor());
 		commits.setBorder(BorderFactory.createEmptyBorder());
-		commits.setGridColor((Color) UIManager.get("MCreatorLAF.LIGHT_ACCENT"));
+		commits.setGridColor(Theme.current().getAltBackgroundColor());
 		commits.setRowHeight(38);
 		ComponentUtils.deriveFont(commits, 13);
 
@@ -189,15 +190,15 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 		commits.getColumnModel().getColumn(1).setPreferredWidth(650);
 
 		JTableHeader header = commits.getTableHeader();
-		header.setBackground((Color) UIManager.get("MCreatorLAF.MAIN_TINT"));
-		header.setForeground((Color) UIManager.get("MCreatorLAF.DARK_ACCENT"));
+		header.setBackground(Theme.current().getInterfaceAccentColor());
+		header.setForeground(Theme.current().getBackgroundColor());
 
 		JScrollPane sp = new JScrollPane(commits);
-		sp.setBackground((Color) UIManager.get("MCreatorLAF.DARK_ACCENT"));
+		sp.setBackground(Theme.current().getBackgroundColor());
 		sp.getViewport().setOpaque(false);
 		sp.getVerticalScrollBar().setUnitIncrement(11);
-		sp.getVerticalScrollBar().setUI(new SlickDarkScrollBarUI((Color) UIManager.get("MCreatorLAF.DARK_ACCENT"),
-				(Color) UIManager.get("MCreatorLAF.LIGHT_ACCENT"), sp.getVerticalScrollBar()));
+		sp.getVerticalScrollBar().setUI(new SlickDarkScrollBarUI(Theme.current().getBackgroundColor(),
+				Theme.current().getAltBackgroundColor(), sp.getVerticalScrollBar()));
 		sp.getVerticalScrollBar().setPreferredSize(new Dimension(8, 0));
 
 		sp.setColumnHeaderView(null);
@@ -289,7 +290,7 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 							}
 
 							TerribleWorkspaceHacks.reloadFromFS(workspacePanel.getMCreator().getWorkspace());
-							workspacePanel.updateMods();
+							workspacePanel.reloadElementsInCurrentTab();
 							workspacePanel.getMCreator().actionRegistry.buildWorkspace.doAction();
 						}
 

@@ -21,6 +21,7 @@ package net.mcreator.vcs.ui.dialogs;
 
 import net.mcreator.ui.component.util.PanelUtils;
 import net.mcreator.ui.init.L10N;
+import net.mcreator.ui.laf.themes.Theme;
 import net.mcreator.vcs.ui.component.LocalChangesPanel;
 import org.eclipse.jgit.api.Status;
 
@@ -40,7 +41,7 @@ public class VCSCommitDialog {
 		commitMessage.setWrapStyleWord(true);
 
 		JScrollPane spane = new JScrollPane(commitMessage);
-		spane.setBorder(BorderFactory.createLineBorder((Color) UIManager.get("MCreatorLAF.LIGHT_ACCENT")));
+		spane.setBorder(BorderFactory.createLineBorder(Theme.current().getAltBackgroundColor()));
 		spane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		spane.setPreferredSize(new Dimension(550, 60));
 

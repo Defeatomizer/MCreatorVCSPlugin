@@ -22,6 +22,7 @@ package net.mcreator.vcs.ui.dialogs;
 import net.mcreator.ui.component.util.ComponentUtils;
 import net.mcreator.ui.component.util.PanelUtils;
 import net.mcreator.ui.init.L10N;
+import net.mcreator.ui.laf.themes.Theme;
 import net.mcreator.vcs.workspace.VCSInfo;
 import org.eclipse.jgit.api.errors.TransportException;
 
@@ -62,7 +63,7 @@ public class VCSSetupDialogs {
 		main.add("Center", form);
 
 		main.add("South", ComponentUtils.setForeground(L10N.label("dialog.vcs.setup_store_password"),
-				(Color) UIManager.get("MCreatorLAF.GRAY_COLOR")));
+				Theme.current().getAltForegroundColor()));
 
 		main.add("North", new JLabel(text));
 

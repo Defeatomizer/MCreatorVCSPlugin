@@ -113,7 +113,7 @@ public class BranchSwitchAction {
 				mcreator.statusBar.setPersistentMessage(L10N.t("statusbar.vcs.switched_working_branch",
 						FilenameUtilsPatched.getName(branchToSwitchTo)));
 
-				mcreator.mv.updateMods();
+				mcreator.mv.reloadElementsInCurrentTab();
 			} catch (GitAPIException | IOException e) {
 				LOG.error("Failed to switch branch!", e);
 				JOptionPane.showMessageDialog(mcreator,

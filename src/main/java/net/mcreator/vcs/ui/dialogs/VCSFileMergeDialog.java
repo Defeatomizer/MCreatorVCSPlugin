@@ -22,6 +22,7 @@ package net.mcreator.vcs.ui.dialogs;
 import net.mcreator.ui.MCreator;
 import net.mcreator.ui.component.util.PanelUtils;
 import net.mcreator.ui.init.L10N;
+import net.mcreator.ui.laf.themes.Theme;
 import net.mcreator.vcs.util.FileSyncHandle;
 import net.mcreator.vcs.util.diff.MergeHandle;
 import net.mcreator.vcs.ui.component.MergeHandleComponent;
@@ -41,7 +42,7 @@ public class VCSFileMergeDialog {
 
 		JPanel merges = new JPanel();
 		merges.setLayout(new BoxLayout(merges, BoxLayout.Y_AXIS));
-		merges.setBackground((Color) UIManager.get("MCreatorLAF.BLACK_ACCENT"));
+		merges.setBackground(Theme.current().getSecondAltBackgroundColor());
 		merges.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
 		List<MergeHandleComponent> mergeHandleComponents = new ArrayList<>();

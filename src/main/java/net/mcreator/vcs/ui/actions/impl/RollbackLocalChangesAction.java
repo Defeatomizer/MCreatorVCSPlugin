@@ -77,7 +77,7 @@ public class RollbackLocalChangesAction extends VCSAction {
 
 					mcreator.statusBar.setPersistentMessage(L10N.t("statusbar.vcs.rolled_back_local_changes"));
 
-					mcreator.mv.updateMods();
+					mcreator.mv.reloadElementsInCurrentTab();
 				} catch (GitAPIException ex) {
 					LOG.error("Failed to rollback changes!", ex);
 					JOptionPane.showMessageDialog(mcreator,

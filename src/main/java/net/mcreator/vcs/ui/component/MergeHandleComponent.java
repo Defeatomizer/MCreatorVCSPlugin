@@ -21,6 +21,7 @@ package net.mcreator.vcs.ui.component;
 
 import net.mcreator.ui.component.util.PanelUtils;
 import net.mcreator.ui.init.L10N;
+import net.mcreator.ui.laf.themes.Theme;
 import net.mcreator.vcs.util.FileSyncHandle;
 import net.mcreator.vcs.util.diff.MergeHandle;
 import net.mcreator.vcs.util.diff.ResultSide;
@@ -70,7 +71,7 @@ public class MergeHandleComponent extends JPanel {
 
 		local.setSelected(true);
 
-		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, (Color) UIManager.get("MCreatorLAF.LIGHT_ACCENT")));
+		setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.current().getAltBackgroundColor()));
 
 		mergeHandleComponents.add(this);
 	}
