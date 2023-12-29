@@ -1,7 +1,8 @@
 {
   "id": "vcs",
   "weight": 10,
-  "minversion": 202300222518,
+  "minversion": 202300400000,
+  "maxversion": 202300499999,
   "javaplugin": "net.mcreator.vcs.Launcher",
   "info": {
     "name": "MCreator VCS plugin",

@@ -21,6 +21,7 @@ package net.mcreator.vcs.ui.actions.impl;
 
 import net.mcreator.ui.action.ActionRegistry;
 import net.mcreator.ui.init.L10N;
+import net.mcreator.ui.init.UIRES;
 import net.mcreator.vcs.ui.component.LocalChangesPanel;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 import org.eclipse.jgit.api.Git;
@@ -45,6 +46,7 @@ public class ShowLocalChangesAction extends VCSAction {
 			} catch (GitAPIException ignored) {
 			}
 		});
+		setIcon(UIRES.get("16px.vcs_changes"));
 	}
 
 }

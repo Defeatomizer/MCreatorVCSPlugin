@@ -21,6 +21,7 @@ package net.mcreator.vcs.ui.actions.impl;
 
 import net.mcreator.ui.action.ActionRegistry;
 import net.mcreator.ui.init.L10N;
+import net.mcreator.ui.init.UIRES;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 
 import javax.swing.*;
@@ -40,6 +41,7 @@ public class UnlinkVCSAction extends VCSAction {
 				actionRegistry.getMCreator().mv.switchToVerticalTab("mods");
 			}
 		});
+		setIcon(UIRES.get("16px.vcs_unlink"));
 	}
 
 }
