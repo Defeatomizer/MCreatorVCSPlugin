@@ -143,6 +143,7 @@ public class WorkspaceVCS {
 	}
 
 	public static void removeVCSWorkspace(Workspace workspace) {
+		new File(workspace.getFolderManager().getWorkspaceCacheDir(), "vcsInfo").delete();
 		closeVCS(workspaces.remove(workspace.getWorkspaceFolder()).git);
 	}
 

@@ -49,6 +49,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.RefSpec;
 
+import javax.annotation.Nonnull;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -58,11 +59,14 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 
 	private static final Logger LOG = LogManager.getLogger("VCS Panel");
 
+	private final List<RevCommit> cachedCommits = new ArrayList<>();
 	private final JTable commits;
 	private final TableRowSorter<TableModel> sorter;
 
@@ -170,7 +174,16 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 			@Override public boolean isCellEditable(int row, int column) {
 				return false;
 			}
-		});
+		}) {
+			@Override public String getToolTipText(@Nonnull MouseEvent event) {
+				return switch (columnAtPoint(event.getPoint())) {
+					case 0 -> cachedCommits.get(rowAtPoint(event.getPoint())).getName();
+					case 1 -> "<html>" + cachedCommits.get(rowAtPoint(event.getPoint())).getFullMessage()
+							.replaceAll("\\R", "<br>");
+					default -> null;
+				};
+			}
+		};
 
 		sorter = new TableRowSorter<>(commits.getModel());
 		commits.setRowSorter(sorter);
@@ -318,6 +331,7 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 
 			DefaultTableModel model = (DefaultTableModel) commits.getModel();
 			model.setRowCount(0);
+			cachedCommits.clear();
 
 			Git git = workspaceVCS.getGit();
 			try {
@@ -326,6 +340,7 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 				switchBranch.setText(L10N.t("workspace.vcs.current_branch", repository.getBranch()));
 
 				for (RevCommit commit : git.log().add(repository.resolve(repository.getFullBranch())).call()) {
+					cachedCommits.add(commit);
 					model.addRow(new Object[] { commit.abbreviate(7).name(), "<html><b>" + commit.getShortMessage(),
 							commit.getAuthorIdent().getName(), commit.getAuthorIdent().getWhen() });
 				}
