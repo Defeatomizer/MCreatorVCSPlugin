@@ -22,11 +22,12 @@ package net.mcreator.vcs.ui.dialogs;
 import net.mcreator.ui.MCreator;
 import net.mcreator.ui.component.util.ComponentUtils;
 import net.mcreator.ui.component.util.PanelUtils;
+import net.mcreator.ui.dialogs.MCreatorDialog;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.laf.themes.Theme;
-import net.mcreator.vcs.util.diff.MergeHandle;
 import net.mcreator.vcs.ui.component.MergeHandleComponent;
 import net.mcreator.vcs.util.WorkspaceMergeHandles;
+import net.mcreator.vcs.util.diff.MergeHandle;
 import net.mcreator.workspace.elements.ModElement;
 import net.mcreator.workspace.elements.SoundElement;
 import net.mcreator.workspace.elements.VariableElement;
@@ -39,7 +40,7 @@ import java.util.List;
 public class VCSWorkspaceMergeDialog {
 
 	public static void show(MCreator mcreator, WorkspaceMergeHandles input) {
-		JPanel dialog = new JPanel(new BorderLayout());
+		MCreatorDialog dialog = new MCreatorDialog(mcreator, L10N.t("dialog.vcs.element_merge_manual_required"));
 
 		JPanel merges = new JPanel();
 		merges.setLayout(new BoxLayout(merges, BoxLayout.Y_AXIS));
@@ -66,28 +67,28 @@ public class VCSWorkspaceMergeDialog {
 			merges.add(new MergeHandleComponent(mergeHandleComponents, input.workspaceFoldersMergeHandle()));
 		}
 
-		if (input.conflictingModElements().size() > 0) {
+		if (!input.conflictingModElements().isEmpty()) {
 			merges.add(PanelUtils.join(FlowLayout.LEFT,
 					ComponentUtils.deriveFont(L10N.label("dialog.vcs.element_merge_elements.mod_elements"), 19)));
 			for (MergeHandle<ModElement> modElementMergeHandle : input.conflictingModElements())
 				merges.add(new MergeHandleComponent(mergeHandleComponents, modElementMergeHandle));
 		}
 
-		if (input.conflictingVariableElements().size() > 0) {
+		if (!input.conflictingVariableElements().isEmpty()) {
 			merges.add(PanelUtils.join(FlowLayout.LEFT,
 					ComponentUtils.deriveFont(L10N.label("dialog.vcs.element_merge_elements.variable_elements"), 19)));
 			for (MergeHandle<VariableElement> variableElementMergeHandle : input.conflictingVariableElements())
 				merges.add(new MergeHandleComponent(mergeHandleComponents, variableElementMergeHandle));
 		}
 
-		if (input.conflictingSoundElements().size() > 0) {
+		if (!input.conflictingSoundElements().isEmpty()) {
 			merges.add(PanelUtils.join(FlowLayout.LEFT,
 					ComponentUtils.deriveFont(L10N.label("dialog.vcs.element_merge_elements.sound_elements"), 19)));
 			for (MergeHandle<SoundElement> soundElementMergeHandle : input.conflictingSoundElements())
 				merges.add(new MergeHandleComponent(mergeHandleComponents, soundElementMergeHandle));
 		}
 
-		if (input.conflictingLangMaps().size() > 0) {
+		if (!input.conflictingLangMaps().isEmpty()) {
 			merges.add(PanelUtils.join(FlowLayout.LEFT,
 					ComponentUtils.deriveFont(L10N.label("dialog.vcs.element_merge_elements.language_maps"), 19)));
 			for (MergeHandle<String> languageMapMergeHandle : input.conflictingLangMaps())
@@ -97,15 +98,16 @@ public class VCSWorkspaceMergeDialog {
 		JScrollPane scrollPane = new JScrollPane(PanelUtils.totalCenterInPanel(merges));
 		scrollPane.getVerticalScrollBar().setUnitIncrement(15);
 		scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-		scrollPane.setMaximumSize(new Dimension(410, 400));
 
-		dialog.add("Center", scrollPane);
-		dialog.add("North", L10N.label("dialog.vcs.element_merge_manual_message"));
+		JButton finish = L10N.button("dialog.vcs.element_merge_finish");
+		finish.addActionListener(e -> mergeHandleComponents.forEach(mhc -> mhc.local.setSelected(true)));
 
-		JOptionPane.showOptionDialog(mcreator, dialog, L10N.t("dialog.vcs.element_merge_manual_required"),
-				JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null,
-				new String[] { L10N.t("dialog.vcs.element_merge_finish") }, null);
+		dialog.getContentPane().add("Center", scrollPane);
+		dialog.getContentPane().add("North", L10N.label("dialog.vcs.element_merge_manual_message"));
+		dialog.getContentPane().add("South", PanelUtils.centerInPanel(finish));
+		dialog.setSize(600, 800);
+		dialog.setLocationRelativeTo(mcreator);
+		dialog.setVisible(true);
 	}
 
 }
