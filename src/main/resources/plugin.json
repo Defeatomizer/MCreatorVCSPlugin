@@ -1,7 +1,7 @@
 {
   "id": "vcs",
   "weight": 10,
-  "minversion": 202300400000,
+  "minversion": 202300451120,
   "maxversion": 202300499999,
   "javaplugin": "net.mcreator.vcs.Launcher",
   "info": {
