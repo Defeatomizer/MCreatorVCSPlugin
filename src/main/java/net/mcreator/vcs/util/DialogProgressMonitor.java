@@ -99,4 +99,8 @@ public class DialogProgressMonitor implements ProgressMonitor {
 	@Override public boolean isCancelled() {
 		return false;
 	}
+
+	@Override public void showDuration(boolean b) {
+	}
+
 }
