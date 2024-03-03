@@ -1,5 +1,7 @@
-apply plugin: 'java'
-apply plugin: 'idea'
+plugins {
+    id "java"
+    id "idea"
+}
 
 if (project.hasProperty("mcreator_path")) {
     project.ext.MCREATOR_PATH = project.getProperty("mcreator_path")
@@ -11,7 +13,7 @@ if (project.hasProperty("mcreator_path")) {
 System.setProperty("user.dir", projectDir.toString())
 
 group = 'net.mcreator.vcs'
-version = '2023.4.1'
+version = '2024.1.0.1'
 
 sourceCompatibility = 17
 targetCompatibility = 17
@@ -64,7 +66,7 @@ tasks.register("exportPlugin", Copy.class) {
     into('license') { from 'license' }
 }
 
-task buildPlugin(type: Zip) {
+tasks.register('buildPlugin', Zip) {
     dependsOn exportPlugin
 
     delete 'build/libs/'
@@ -79,7 +81,7 @@ task buildPlugin(type: Zip) {
     }
 }
 
-task runMCreatorWithPlugin(type: JavaExec) {
+tasks.register('runMCreatorWithPlugin', JavaExec) {
     dependsOn jar
 
     environment("MCREATOR_PLUGINS_FOLDER", file("./build/libs"))
