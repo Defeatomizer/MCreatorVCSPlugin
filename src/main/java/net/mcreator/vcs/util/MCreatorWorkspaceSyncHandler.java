@@ -502,13 +502,6 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 		// process workspace base files
 		List<GeneratorTemplate> modBaseTemplates = localWorkspace.getGenerator().getModBaseGeneratorTemplatesList(true);
 		for (GeneratorTemplate generatorTemplate : modBaseTemplates) {
-			if (generatorTemplate.getTemplateDefinition().get("canLock") != null
-					&& generatorTemplate.getTemplateDefinition().get("canLock")
-					.equals("true")) // can this file be locked
-				if (localWorkspace.getWorkspaceSettings()
-						.isLockBaseModFiles()) // are mod base file locked in local workspace
-					continue; // if they are, we skip this file
-
 			for (FileSyncHandle handle : handles) {
 				if (isVCSPathThisFile(localWorkspace, handle.getBasePath(), generatorTemplate.getFile())) {
 					unprocessedHandles.remove(handle);
