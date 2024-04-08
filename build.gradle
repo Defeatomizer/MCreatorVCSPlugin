@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 plugins {
     id "java"
     id "idea"
@@ -13,7 +15,7 @@ repositories {
 System.setProperty("user.dir", projectDir.toString())
 
 group = 'net.mcreator.vcs'
-version = '2024.1.0.1'
+version = new JsonSlurper().parse(file('src/main/resources/plugin.json'))['info']['version']
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
