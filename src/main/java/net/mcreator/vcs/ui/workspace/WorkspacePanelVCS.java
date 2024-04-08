@@ -24,7 +24,6 @@ import net.mcreator.ui.component.util.ComponentUtils;
 import net.mcreator.ui.dialogs.ProgressDialog;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
-import net.mcreator.ui.laf.SlickDarkScrollBarUI;
 import net.mcreator.ui.laf.themes.Theme;
 import net.mcreator.ui.workspace.AbstractWorkspacePanel;
 import net.mcreator.ui.workspace.WorkspacePanel;
@@ -210,8 +209,6 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 		sp.setBackground(Theme.current().getBackgroundColor());
 		sp.getViewport().setOpaque(false);
 		sp.getVerticalScrollBar().setUnitIncrement(11);
-		sp.getVerticalScrollBar().setUI(new SlickDarkScrollBarUI(Theme.current().getBackgroundColor(),
-				Theme.current().getAltBackgroundColor(), sp.getVerticalScrollBar()));
 		sp.getVerticalScrollBar().setPreferredSize(new Dimension(8, 0));
 
 		sp.setColumnHeaderView(null);
