@@ -106,7 +106,7 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 		bar.add(switchBranch);
 
 		JButton fetchBranches = L10N.button("dialog.vcs.branches_popup.fetch_branches");
-		fetchBranches.setIcon(UIRES.get("16px.ext.gif"));
+		fetchBranches.setIcon(UIRES.get("16px.ext"));
 		fetchBranches.setContentAreaFilled(false);
 		fetchBranches.setOpaque(false);
 		ComponentUtils.deriveFont(fetchBranches, 12);
@@ -114,7 +114,7 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 		bar.add(fetchBranches);
 
 		JButton deleteBranch = L10N.button("dialog.vcs.branches_popup.delete_branch");
-		deleteBranch.setIcon(UIRES.get("16px.delete.gif"));
+		deleteBranch.setIcon(UIRES.get("16px.delete"));
 		deleteBranch.setContentAreaFilled(false);
 		deleteBranch.setOpaque(false);
 		ComponentUtils.deriveFont(deleteBranch, 12);
