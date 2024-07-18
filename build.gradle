@@ -11,13 +11,10 @@ repositories {
     flatDir { dirs mcreator_path + "/lib" }
 }
 
-// workaround for IDEA-265203
-System.setProperty("user.dir", projectDir.toString())
-
 group = 'net.mcreator.vcs'
 version = new JsonSlurper().parse(file('src/main/resources/plugin.json'))['info']['version']
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 idea {
     module {
