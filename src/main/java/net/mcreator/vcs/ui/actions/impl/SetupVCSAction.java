@@ -23,7 +23,9 @@ import net.mcreator.ui.MCreator;
 import net.mcreator.ui.action.ActionRegistry;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
+import net.mcreator.ui.variants.modmaker.ModMaker;
 import net.mcreator.vcs.ui.dialogs.VCSSetupDialogs;
+import net.mcreator.vcs.ui.workspace.WorkspacePanelVCS;
 import net.mcreator.vcs.workspace.VCSInfo;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 
@@ -49,7 +51,9 @@ public class SetupVCSAction extends VCSAction {
 			VCSInfo vcsInfo = VCSSetupDialogs.getVCSInfoDialog(mcreator, L10N.t("dialog.vcs.setup.message"));
 			if (vcsInfo != null) {
 				if (WorkspaceVCS.initNewVCSWorkspace(mcreator.getWorkspace(), vcsInfo, mcreator)) {
-					mcreator.actionRegistry.getActions().stream()
+					if (!(mcreator instanceof ModMaker))
+						new WorkspacePanelVCS(mcreator);
+					mcreator.getActionRegistry().getActions().stream()
 							.filter(action -> action instanceof VCSStateChangeListener)
 							.forEach(action -> ((VCSStateChangeListener) action).vcsStateChanged());
 					return true;

@@ -187,7 +187,7 @@ public class SyncLocalWithRemoteAction extends VCSAction {
 				});
 
 				if (trackingStatus != null) {
-					actionRegistry.getMCreator().statusBar.setPersistentMessage(
+					actionRegistry.getMCreator().getStatusBar().setPersistentMessage(
 							L10N.t("statusbar.vcs.sync_with_remote_workspace.diff_message",
 									trackingStatus.getAheadCount(), trackingStatus.getBehindCount()));
 				}
@@ -198,7 +198,7 @@ public class SyncLocalWithRemoteAction extends VCSAction {
 						L10N.t("dialog.vcs.sync_with_remote_workspace.push_fail.title"), JOptionPane.ERROR_MESSAGE);
 			}
 
-			actionRegistry.getMCreator().mv.reloadElementsInCurrentTab();
+			actionRegistry.getMCreator().reloadWorkspaceTabContents();
 			actionRegistry.getMCreator().setCursor(Cursor.getDefaultCursor());
 
 			if (needsWorkspaceBuildAfter)

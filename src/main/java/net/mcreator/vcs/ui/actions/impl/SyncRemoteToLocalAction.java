@@ -76,7 +76,7 @@ public class SyncRemoteToLocalAction extends VCSAction {
 				// check if we fetched anything
 				if (git.getRepository().findRef(Constants.FETCH_HEAD) == null
 						|| git.getRepository().findRef(Constants.FETCH_HEAD).getObjectId() == null) {
-					actionRegistry.getMCreator().statusBar.setPersistentMessage(
+					actionRegistry.getMCreator().getStatusBar().setPersistentMessage(
 							L10N.t("statusbar.vcs.pull.no_commits"));
 					actionRegistry.getMCreator().setCursor(Cursor.getDefaultCursor());
 					return;
@@ -133,9 +133,9 @@ public class SyncRemoteToLocalAction extends VCSAction {
 								workspaceSettingsChange);
 					// possible refactor after sync end
 
-					actionRegistry.getMCreator().statusBar.setPersistentMessage(
+					actionRegistry.getMCreator().getStatusBar().setPersistentMessage(
 							L10N.t("statusbar.vcs.pull.changes_synced"));
-					actionRegistry.getMCreator().mv.reloadElementsInCurrentTab();
+					actionRegistry.getMCreator().reloadWorkspaceTabContents();
 				} else {
 					// unstash the stash as we will not be using it
 					if (stash != null)
@@ -144,7 +144,7 @@ public class SyncRemoteToLocalAction extends VCSAction {
 					JOptionPane.showMessageDialog(actionRegistry.getMCreator(),
 							L10N.t("dialog.vcs.error.local_changes_not_synced.message"),
 							L10N.t("dialog.vcs.error.local_changes_not_synced.title"), JOptionPane.WARNING_MESSAGE);
-					actionRegistry.getMCreator().statusBar.setPersistentMessage(
+					actionRegistry.getMCreator().getStatusBar().setPersistentMessage(
 							L10N.t("statusbar.vcs.pull.local_changes_not_synced"));
 				}
 			} catch (Exception ex) {

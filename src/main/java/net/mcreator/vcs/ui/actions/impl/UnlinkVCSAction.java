@@ -19,9 +19,13 @@
 
 package net.mcreator.vcs.ui.actions.impl;
 
+import net.mcreator.ui.MCreatorTabs;
 import net.mcreator.ui.action.ActionRegistry;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
+import net.mcreator.ui.variants.modmaker.ModMaker;
+import net.mcreator.vcs.ui.component.ViewWrapper;
+import net.mcreator.vcs.ui.workspace.WorkspacePanelVCS;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 
 import javax.swing.*;
@@ -36,7 +40,17 @@ public class UnlinkVCSAction extends VCSAction {
 				WorkspaceVCS.removeVCSWorkspace(actionRegistry.getMCreator().getWorkspace());
 				actionRegistry.getActions().stream().filter(action -> action instanceof VCSAction)
 						.forEach(action -> ((VCSAction) action).vcsStateChanged());
-				actionRegistry.getMCreator().mv.switchToVerticalTab("mods");
+				if (actionRegistry.getMCreator() instanceof ModMaker mod) {
+					mod.getWorkspacePanel().switchToVerticalTab("mods");
+				} else {
+					for (MCreatorTabs.Tab tab : actionRegistry.getMCreator().getTabs().getTabs().stream().toList()) {
+						if (tab.getContent() instanceof ViewWrapper wrap
+								&& wrap.getViewContents() instanceof WorkspacePanelVCS) {
+							wrap.setCloseable(true);
+							actionRegistry.getMCreator().getTabs().closeTab(tab);
+						}
+					}
+				}
 			}
 		});
 		setIcon(UIRES.get("16px.vcs_unlink"));

@@ -110,10 +110,10 @@ public class BranchSwitchAction {
 					WorkspaceSettingsAction.refactorWorkspace(mcreator, workspaceSettingsChange);
 				// possible refactor after sync end
 
-				mcreator.statusBar.setPersistentMessage(L10N.t("statusbar.vcs.switched_working_branch",
+				mcreator.getStatusBar().setPersistentMessage(L10N.t("statusbar.vcs.switched_working_branch",
 						FilenameUtilsPatched.getName(branchToSwitchTo)));
 
-				mcreator.mv.reloadElementsInCurrentTab();
+				mcreator.reloadWorkspaceTabContents();
 			} catch (GitAPIException | IOException e) {
 				LOG.error("Failed to switch branch!", e);
 				JOptionPane.showMessageDialog(mcreator,

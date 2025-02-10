@@ -75,9 +75,9 @@ public class RollbackLocalChangesAction extends VCSAction {
 					if (workspaceSettingsChange.refactorNeeded()) // possible refactor after sync end
 						WorkspaceSettingsAction.refactorWorkspace(mcreator, workspaceSettingsChange);
 
-					mcreator.statusBar.setPersistentMessage(L10N.t("statusbar.vcs.rolled_back_local_changes"));
+					mcreator.getStatusBar().setPersistentMessage(L10N.t("statusbar.vcs.rolled_back_local_changes"));
 
-					mcreator.mv.reloadElementsInCurrentTab();
+					mcreator.reloadWorkspaceTabContents();
 				} catch (GitAPIException ex) {
 					LOG.error("Failed to rollback changes!", ex);
 					JOptionPane.showMessageDialog(mcreator,

@@ -27,6 +27,7 @@ import net.mcreator.ui.MCreator;
 import net.mcreator.ui.dialogs.file.FileDialogs;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
+import net.mcreator.ui.variants.modmaker.ModMaker;
 import net.mcreator.ui.workspace.selector.WorkspaceSelector;
 import net.mcreator.vcs.ui.actions.VCSActionRegistry;
 import net.mcreator.vcs.ui.dialogs.VCSSetupDialogs;
@@ -54,13 +55,18 @@ import java.io.File;
 					e -> cloneRemote(selector));
 		}));
 		addListener(MCreatorLoadedEvent.class, event -> {
-			if (WorkspaceVCS.loadVCSWorkspace(event.getMCreator().getWorkspace()))
+			boolean loaded = WorkspaceVCS.loadVCSWorkspace(event.getMCreator().getWorkspace());
+			if (loaded)
 				LOG.info("Loaded VCS for current workspace");
 
 			SwingUtilities.invokeLater(() -> {
 				MCreator mcreator = event.getMCreator();
-				mcreator.mv.addVerticalTab("vcs", L10N.t("workspace.category.remote_workspace"),
-						new WorkspacePanelVCS(mcreator.mv));
+				if (mcreator instanceof ModMaker mod) {
+					mod.getWorkspacePanel().addVerticalTab("vcs", L10N.t("workspace.category.remote_workspace"),
+							new WorkspacePanelVCS(mod.getWorkspacePanel()));
+				} else if (loaded) {
+					new WorkspacePanelVCS(mcreator);
+				}
 				initActions(mcreator);
 			});
 		});
