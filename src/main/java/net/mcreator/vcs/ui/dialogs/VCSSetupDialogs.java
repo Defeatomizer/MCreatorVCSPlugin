@@ -23,13 +23,22 @@ import net.mcreator.ui.component.util.ComponentUtils;
 import net.mcreator.ui.component.util.PanelUtils;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.laf.themes.Theme;
+import net.mcreator.util.DesktopUtils;
 import net.mcreator.vcs.workspace.VCSInfo;
 import org.eclipse.jgit.api.errors.TransportException;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 public class VCSSetupDialogs {
+
+	private static final Pattern GITHUB_URL = Pattern.compile("^((http|https)://)?github\\.com(/.*)?$");
 
 	public static VCSInfo getVCSInfoDialog(Window parent, String text) {
 		return getVCSInfoDialog(parent, text, null, null, false, true);
@@ -37,12 +46,43 @@ public class VCSSetupDialogs {
 
 	public static VCSInfo getVCSInfoDialog(Window parent, String text, String r, String u, boolean p,
 			boolean enableRemote) {
-		JPanel main = new JPanel(new BorderLayout(0, 20));
+		JPanel main = new JPanel(new BorderLayout(0, 10));
 
 		JTextField remote = new JTextField(34);
 		JTextField username = new JTextField(25);
 		JPasswordField password = new JPasswordField(25);
 		JCheckBox savePassword = L10N.checkbox("dialog.vcs.setup_save_password");
+		JButton newToken = L10N.button("dialog.vcs.setup_git_access_token.create");
+		JLabel pwLabel = L10N.label("dialog.vcs.setup_git_password");
+
+		AtomicBoolean validUri = new AtomicBoolean(false);
+		try {
+			URI helpURI = new URI("https://github.com/settings/tokens/new");
+			newToken.addActionListener(e -> DesktopUtils.browse(helpURI));
+			validUri.set(true);
+		} catch (URISyntaxException ignored) {
+		}
+
+		newToken.setVisible(false);
+		remote.getDocument().addDocumentListener(new DocumentListener() {
+
+			@Override public void insertUpdate(DocumentEvent e) {
+				changedUpdate(e);
+			}
+
+			@Override public void removeUpdate(DocumentEvent e) {
+				changedUpdate(e);
+			}
+
+			@Override public void changedUpdate(DocumentEvent e) {
+				boolean githubRepo = GITHUB_URL.matcher(remote.getText()).find();
+				pwLabel.setText(githubRepo ?
+						L10N.t("dialog.vcs.setup_git_access_token") :
+						L10N.t("dialog.vcs.setup_git_password"));
+				newToken.setVisible(validUri.get() && githubRepo);
+			}
+
+		});
 
 		remote.setEditable(enableRemote);
 		if (!enableRemote)
@@ -54,10 +94,11 @@ public class VCSSetupDialogs {
 
 		remote.setPreferredSize(new Dimension(300, 15));
 
-		JPanel form = new JPanel(new GridLayout(4, 1, 0, 5));
+		JPanel form = new JPanel(new GridLayout(0, 1, 0, 5));
 		form.add(PanelUtils.westAndEastElement(L10N.label("dialog.vcs.setup_remove_repository_url"), remote, 5, 0));
 		form.add(PanelUtils.westAndEastElement(L10N.label("dialog.vcs.setup_git_username"), username, 5, 0));
-		form.add(PanelUtils.westAndEastElement(L10N.label("dialog.vcs.setup_git_password"), password, 5, 0));
+		form.add(PanelUtils.westAndEastElement(pwLabel, password, 5, 0));
+		form.add(PanelUtils.westAndEastElement(newToken, Box.createHorizontalGlue(), 5, 0));
 		form.add(savePassword);
 
 		main.add("Center", form);

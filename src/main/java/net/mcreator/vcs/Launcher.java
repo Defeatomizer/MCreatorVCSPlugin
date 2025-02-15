@@ -35,6 +35,7 @@ import net.mcreator.vcs.ui.workspace.WorkspacePanelVCS;
 import net.mcreator.vcs.util.CloneWorkspace;
 import net.mcreator.vcs.workspace.VCSInfo;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
+import net.mcreator.workspace.ShareableZIPManager;
 import net.mcreator.workspace.WorkspaceUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,6 +50,9 @@ import java.io.File;
 
 	public Launcher(Plugin plugin) {
 		super(plugin);
+
+		ShareableZIPManager.excludeWhenZipping(".git/");
+
 		addListener(WorkspaceSelectorLoadedEvent.class, event -> SwingUtilities.invokeLater(() -> {
 			WorkspaceSelector selector = event.getWorkspaceSelector();
 			selector.addWorkspaceButton(L10N.t("dialog.workspace_selector.clone"), UIRES.get("vcs_clone"),
