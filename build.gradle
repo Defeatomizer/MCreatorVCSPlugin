@@ -47,39 +47,18 @@ dependencies {
 
 tasks.jar {
     archiveFileName.set('mcreator-vcs-' + project.version + '.zip')
-    from {
-        configurations.export.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-}
-
-tasks.register("extractPlugin", Copy.class) {
-    doFirst {
-        delete 'build/export/'
-        mkdir 'build/export/'
-    }
-
-    dependsOn jar
-
-    into 'build/export'
-    into('') {
-        from zipTree(file('build/libs/mcreator-vcs-' + project.version + '.zip'))
-        from 'LICENSE.txt'
-    }
-    into('license') { from 'license' }
-}
-
-tasks.register('exportPlugin', Zip) {
-    dependsOn extractPlugin
 
     delete 'build/libs/'
 
-    from 'build/export/'
-    into ''
-    destinationDirectory = file('build/libs/')
-    archiveFileName = 'mcreator-vcs-' + project.version + '.zip'
+    from 'LICENSE.txt'
+    from('license') { into 'license' }
 
-    doLast {
-        delete 'build/export/'
+    configurations.export.each {
+        from((it.isDirectory() ? fileTree(it) : zipTree(it)).matching {
+            exclude 'META-INF/**', 'OSGI-INF/**', 'about.html'
+        } + (it.isDirectory() ? fileTree(it) : zipTree(it)).matching {
+            include 'META-INF/services/**'
+        })
     }
 }
 

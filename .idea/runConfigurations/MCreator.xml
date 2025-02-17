@@ -1,8 +1,13 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="MCreator" type="Application" factoryName="Application" singleton="true">
+    <envs>
+      <env name="MCREATOR_PLUGINS_FOLDER" value="$PROJECT_DIR$/build/libs" />
+      <env name="MCREATOR_PLUGINS_DEV" value="" />
+    </envs>
     <option name="MAIN_CLASS_NAME" value="net.mcreator.Launcher" />
     <module name="MCreatorVCSPlugin.MCreator.main" />
     <option name="VM_PARAMETERS" value="--add-opens=java.base/java.lang=ALL-UNNAMED" />
+    <option name="WORKING_DIRECTORY" value="$MODULE_WORKING_DIR$" />
     <method v="2">
       <option name="Make" enabled="true" />
       <option name="Gradle.BeforeRunTask" enabled="true" tasks="jar" externalProjectPath="$PROJECT_DIR$" vmOptions="" scriptParameters="" />
