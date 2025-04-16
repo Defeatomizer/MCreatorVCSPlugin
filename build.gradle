@@ -42,7 +42,7 @@ dependencies {
         //noinspection ForeignDelegate
         implementation it
     })
-    export 'org.openl.jgit:org.eclipse.jgit:6.9.0.202403050737-openl'
+    export 'org.openl.jgit:org.eclipse.jgit:7.2.0.202503040940-openl'
 }
 
 tasks.jar {
