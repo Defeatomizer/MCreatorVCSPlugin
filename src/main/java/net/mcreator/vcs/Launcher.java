@@ -27,7 +27,6 @@ import net.mcreator.ui.MCreator;
 import net.mcreator.ui.dialogs.file.FileDialogs;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
-import net.mcreator.ui.variants.modmaker.ModMaker;
 import net.mcreator.ui.workspace.selector.WorkspaceSelector;
 import net.mcreator.vcs.ui.actions.VCSActionRegistry;
 import net.mcreator.vcs.ui.dialogs.VCSSetupDialogs;
@@ -39,10 +38,13 @@ import net.mcreator.workspace.ShareableZIPManager;
 import net.mcreator.workspace.WorkspaceUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.jgit.lib.GpgSignatureVerifierFactory;
+import org.eclipse.jgit.lib.GpgSigner;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.util.ServiceLoader;
 
 @SuppressWarnings("unused") public class Launcher extends JavaPlugin {
 
@@ -51,6 +53,9 @@ import java.io.File;
 	public Launcher(Plugin plugin) {
 		super(plugin);
 
+		ServiceLoader.load(GpgSigner.class, getClass().getClassLoader()).findFirst().ifPresent(GpgSigner::setDefault);
+		ServiceLoader.load(GpgSignatureVerifierFactory.class, getClass().getClassLoader()).findFirst()
+				.ifPresent(GpgSignatureVerifierFactory::setDefault);
 		ShareableZIPManager.excludeWhenZipping(".git/");
 
 		addListener(WorkspaceSelectorLoadedEvent.class, event -> SwingUtilities.invokeLater(() -> {
@@ -59,18 +64,13 @@ import java.io.File;
 					e -> cloneRemote(selector));
 		}));
 		addListener(MCreatorLoadedEvent.class, event -> {
-			boolean loaded = WorkspaceVCS.loadVCSWorkspace(event.getMCreator().getWorkspace());
-			if (loaded)
+			MCreator mcreator = event.getMCreator();
+			if (WorkspaceVCS.loadVCSWorkspace(mcreator.getWorkspace()))
 				LOG.info("Loaded VCS for current workspace");
 
 			SwingUtilities.invokeLater(() -> {
-				MCreator mcreator = event.getMCreator();
-				if (mcreator instanceof ModMaker mod) {
-					mod.getWorkspacePanel().addVerticalTab("vcs", L10N.t("workspace.category.remote_workspace"),
-							new WorkspacePanelVCS(mod.getWorkspacePanel()));
-				} else if (loaded) {
-					new WorkspacePanelVCS(mcreator);
-				}
+				mcreator.getWorkspacePanel().addVerticalTab("vcs", L10N.t("workspace.category.remote_workspace"),
+						new WorkspacePanelVCS(mcreator.getWorkspacePanel()));
 				initActions(mcreator);
 			});
 		});

@@ -198,7 +198,7 @@ public class SyncLocalWithRemoteAction extends VCSAction {
 						L10N.t("dialog.vcs.sync_with_remote_workspace.push_fail.title"), JOptionPane.ERROR_MESSAGE);
 			}
 
-			actionRegistry.getMCreator().reloadWorkspaceTabContents();
+			actionRegistry.getMCreator().getWorkspacePanel().reloadWorkspaceTab();
 			actionRegistry.getMCreator().setCursor(Cursor.getDefaultCursor());
 
 			if (needsWorkspaceBuildAfter)

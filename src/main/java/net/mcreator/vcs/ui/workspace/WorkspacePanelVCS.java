@@ -19,21 +19,18 @@
 
 package net.mcreator.vcs.ui.workspace;
 
-import net.mcreator.ui.MCreator;
 import net.mcreator.ui.component.TransparentToolBar;
 import net.mcreator.ui.component.util.ComponentUtils;
 import net.mcreator.ui.dialogs.ProgressDialog;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
 import net.mcreator.ui.laf.themes.Theme;
-import net.mcreator.ui.variants.resourcepackmaker.ResourcePackMaker;
+import net.mcreator.ui.workspace.AbstractMainWorkspacePanel;
 import net.mcreator.ui.workspace.AbstractWorkspacePanel;
-import net.mcreator.ui.workspace.WorkspacePanel;
 import net.mcreator.util.FilenameUtilsPatched;
 import net.mcreator.vcs.ui.actions.VCSActionRegistry;
 import net.mcreator.vcs.ui.actions.impl.SetupVCSAction;
 import net.mcreator.vcs.ui.component.BranchesPopup;
-import net.mcreator.vcs.ui.component.ViewWrapper;
 import net.mcreator.vcs.util.DialogProgressMonitor;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 import net.mcreator.workspace.TerribleWorkspaceHacks;
@@ -68,27 +65,14 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 
 	private static final Logger LOG = LogManager.getLogger("VCS Panel");
 
-	private final MCreator mcreator;
-
 	private final List<RevCommit> cachedCommits = new ArrayList<>();
 	private final JTable commits;
 	private final TableRowSorter<TableModel> sorter;
 
 	private final JButton switchBranch = new JButton(UIRES.get("16px.vcs"));
 
-	public WorkspacePanelVCS(WorkspacePanel workspacePanel) {
-		this(workspacePanel, workspacePanel.getMCreator());
-	}
-
-	public WorkspacePanelVCS(MCreator mcreator) {
-		this(null, mcreator);
-		new ViewWrapper(mcreator, "~/vcs", true, this).setViewName(L10N.t("workspace.category.remote_workspace"))
-				.setCloseable(false).setShowNewTab(false).showView();
-	}
-
-	private WorkspacePanelVCS(WorkspacePanel workspacePanel, MCreator mcreator) {
+	public WorkspacePanelVCS(AbstractMainWorkspacePanel workspacePanel) {
 		super(workspacePanel);
-		this.mcreator = mcreator;
 		setLayout(new BorderLayout(0, 5));
 
 		TransparentToolBar bar = new TransparentToolBar();
@@ -103,7 +87,7 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 		bar.add(uncommitted);
 
 		uncommitted.addActionListener(
-				e -> VCSActionRegistry.get(mcreator).showUnsyncedChanges.doAction());
+				e -> VCSActionRegistry.get(workspacePanel.getMCreator()).showUnsyncedChanges.doAction());
 
 		JButton checkout = L10N.button("workspace.vcs.jump_to_selected_commit");
 		checkout.setIcon(UIRES.get("16px.rwd"));
@@ -137,31 +121,31 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 		deleteBranch.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
 		bar.add(deleteBranch);
 
-		WorkspaceVCS workspaceVCS = WorkspaceVCS.getVCSWorkspace(mcreator.getWorkspace());
+		WorkspaceVCS workspaceVCS = WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace());
 		switchBranch.addActionListener(
-				e -> new BranchesPopup(workspaceVCS, mcreator, null).show(switchBranch, 4, 20));
+				e -> new BranchesPopup(workspaceVCS, workspacePanel.getMCreator(), null).show(switchBranch, 4, 20));
 		fetchBranches.addActionListener(e -> {
 			try {
-				DialogProgressMonitor monitor = new DialogProgressMonitor(mcreator,
+				DialogProgressMonitor monitor = new DialogProgressMonitor(workspacePanel.getMCreator(),
 						L10N.t("dialog.vcs.branches_popup.fetch_branches"));
 				DialogProgressMonitor.runTask(monitor, "WorkspacePanelVCS-FetchBranches",
 						() -> workspaceVCS.getGit().fetch().setRemote("origin").setRemoveDeletedRefs(true)
 								.setCredentialsProvider(workspaceVCS.getCredentialsProvider(
-										mcreator.getWorkspaceFolder(),
-										mcreator)).setProgressMonitor(monitor).call());
+										workspacePanel.getMCreator().getWorkspaceFolder(),
+										workspacePanel.getMCreator())).setProgressMonitor(monitor).call());
 			} catch (Exception ex) {
 				LOG.error("Failed to fetch branches", ex);
 			}
 		});
-		deleteBranch.addActionListener(e -> new BranchesPopup(workspaceVCS, mcreator, ref -> {
+		deleteBranch.addActionListener(e -> new BranchesPopup(workspaceVCS, workspacePanel.getMCreator(), ref -> {
 			Git git = workspaceVCS.getGit();
-			if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(mcreator,
+			if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(workspacePanel.getMCreator(),
 					L10N.t("dialog.vcs.branches_popup.delete_branch.message", ref.getName()),
 					L10N.t("dialog.vcs.branches_popup.delete_branch.title"), JOptionPane.YES_NO_OPTION)) {
 				try {
 					CredentialsProvider credentialsProvider = workspaceVCS.getCredentialsProvider(
-							mcreator.getWorkspaceFolder(), mcreator);
-					DialogProgressMonitor monitor = new DialogProgressMonitor(mcreator,
+							workspacePanel.getMCreator().getWorkspaceFolder(), workspacePanel.getMCreator());
+					DialogProgressMonitor monitor = new DialogProgressMonitor(workspacePanel.getMCreator(),
 							L10N.t("dialog.vcs.branches_popup.delete_branch"));
 					DialogProgressMonitor.runTask(monitor, "BranchesPopup-DeleteBranch", () -> {
 						git.reset().setMode(ResetCommand.ResetType.HARD).call();
@@ -174,7 +158,7 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 						return git.fetch().setRemote("origin").setRemoveDeletedRefs(true)
 								.setCredentialsProvider(credentialsProvider).setProgressMonitor(monitor).call();
 					});
-					mcreator.reloadWorkspaceTabContents();
+					workspacePanel.reloadWorkspaceTab();
 				} catch (Exception er) {
 					LOG.error("Failed to delete branch", er);
 				}
@@ -250,12 +234,12 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 		if (row == -1)
 			return;
 
-		WorkspaceVCS workspaceVCS = WorkspaceVCS.getVCSWorkspace(mcreator.getWorkspace());
+		WorkspaceVCS workspaceVCS = WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace());
 		String shortCommitId = commits.getValueAt(row, 0).toString();
 		if (shortCommitId == null || workspaceVCS == null)
 			return;
 
-		ProgressDialog pd = new ProgressDialog(mcreator,
+		ProgressDialog pd = new ProgressDialog(workspacePanel.getMCreator(),
 				L10N.t("workspace.vcs.jump_to_selected_commit"));
 		new Thread(() -> {
 			ProgressDialog.ProgressUnit pu = null;
@@ -264,7 +248,7 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 				for (RevCommit commit : git.log().add(git.getRepository().resolve(git.getRepository().getFullBranch()))
 						.call()) {
 					if (commit.abbreviate(7).name().equals(shortCommitId)) {
-						int option = JOptionPane.showOptionDialog(mcreator,
+						int option = JOptionPane.showOptionDialog(workspacePanel.getMCreator(),
 								L10N.t("workspace.vcs.jump_commit_confirmation", commit.getShortMessage()),
 								L10N.t("workspace.vcs.jump_commit_confirmation.title"), JOptionPane.DEFAULT_OPTION,
 								JOptionPane.QUESTION_MESSAGE, null,
@@ -315,9 +299,9 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 							} catch (Exception ignored) {
 							}
 
-							TerribleWorkspaceHacks.reloadFromFS(mcreator.getWorkspace());
-							mcreator.reloadWorkspaceTabContents();
-							mcreator.getActionRegistry().buildWorkspace.doAction();
+							TerribleWorkspaceHacks.reloadFromFS(workspacePanel.getMCreator().getWorkspace());
+							workspacePanel.reloadWorkspaceTab();
+							workspacePanel.getMCreator().getActionRegistry().buildWorkspace.doAction();
 						}
 
 						break;
@@ -334,11 +318,11 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 	}
 
 	@Override public boolean canSwitchToSection() {
-		return SetupVCSAction.setupVCSForWorkspaceIfNotYet(mcreator);
+		return SetupVCSAction.setupVCSForWorkspaceIfNotYet(workspacePanel.getMCreator());
 	}
 
 	@Override public void reloadElements() {
-		WorkspaceVCS workspaceVCS = WorkspaceVCS.getVCSWorkspace(mcreator.getWorkspace());
+		WorkspaceVCS workspaceVCS = WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace());
 		if (workspaceVCS != null) {
 			int row = commits.getSelectedRow();
 
@@ -370,14 +354,8 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 	}
 
 	@Override public void refilterElements() {
-		if (WorkspaceVCS.getVCSWorkspace(mcreator.getWorkspace()) != null) {
-			if (workspacePanel != null)
-				sorter.setRowFilter(RowFilter.regexFilter(workspacePanel.search.getText()));
-			else if (mcreator instanceof ResourcePackMaker resPack)
-				sorter.setRowFilter(RowFilter.regexFilter(resPack.getWorkspacePanel().search.getText()));
-			else
-				sorter.setRowFilter(null);
-		}
+		if (WorkspaceVCS.getVCSWorkspace(workspacePanel.getMCreator().getWorkspace()) != null)
+			sorter.setRowFilter(RowFilter.regexFilter(workspacePanel.getSearchTerm()));
 	}
 
 }

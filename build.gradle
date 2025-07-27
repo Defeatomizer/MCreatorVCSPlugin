@@ -42,13 +42,16 @@ dependencies {
         //noinspection ForeignDelegate
         implementation it
     })
-    export 'org.openl.jgit:org.eclipse.jgit:7.2.0.202503040940-openl'
+    export group: 'org.openl.jgit', name: 'org.eclipse.jgit', version: '7.2.0.202503040940-openl'
+    export group: 'org.openl.jgit', name: 'org.eclipse.jgit.gpg.bc', version: '6.8.0.202311291450-openl'
+    export group: 'org.openl.jgit', name: 'org.eclipse.jgit.ssh.apache', version: '6.8.0.202311291450-openl'
 }
 
 tasks.jar {
     archiveFileName.set('mcreator-vcs-' + project.version + '.zip')
 
-    delete 'build/libs/'
+    delete 'build/export/', 'build/libs/'
+    mkdir 'build/export/'
 
     from 'LICENSE.txt'
     from('license') { into 'license' }
@@ -56,9 +59,17 @@ tasks.jar {
     configurations.export.each {
         from((it.isDirectory() ? fileTree(it) : zipTree(it)).matching {
             exclude 'META-INF/**', 'OSGI-INF/**', 'about.html'
-        } + (it.isDirectory() ? fileTree(it) : zipTree(it)).matching {
-            include 'META-INF/services/**'
         })
+    }
+
+    from(mergeServiceProviders(configurations.export.collect {
+        (it.isDirectory() ? fileTree(it) : zipTree(it)).matching {
+            include 'META-INF/services/**'
+        }
+    })) { into 'META-INF/services' }
+
+    doLast {
+        delete 'build/export/', 'build/tmp/.cache/'
     }
 }
 
@@ -74,4 +85,24 @@ tasks.register('runMCreatorWithPlugin', JavaExec) {
     mainClass.set('net.mcreator.Launcher')
 
     workingDir = mcreator_path
+}
+
+private List<File> mergeServiceProviders(Iterable<FileTree> files, String parentFolder = 'export/services/') {
+    def services = new HashMap<String, List<String>>()
+    files.each { it.each {
+        def providers = services.computeIfAbsent(it.name) { new ArrayList<>() }
+        it.eachLine {
+            if (it.matches "(\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*\\.)*\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*")
+                providers.add(it)
+            return it
+        }
+    } }
+
+    def base = new File(layout.buildDirectory.asFile.get(), parentFolder)
+    base.mkdirs()
+    return services.collect {
+        def merged = new File(base, it.key)
+        merged.text = String.join(System.lineSeparator(), it.value)
+        return merged
+    }
 }

@@ -135,7 +135,7 @@ public class SyncRemoteToLocalAction extends VCSAction {
 
 					actionRegistry.getMCreator().getStatusBar().setPersistentMessage(
 							L10N.t("statusbar.vcs.pull.changes_synced"));
-					actionRegistry.getMCreator().reloadWorkspaceTabContents();
+					actionRegistry.getMCreator().getWorkspacePanel().reloadWorkspaceTab();
 				} else {
 					// unstash the stash as we will not be using it
 					if (stash != null)

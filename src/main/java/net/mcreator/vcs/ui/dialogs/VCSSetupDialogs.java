@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
 
 public class VCSSetupDialogs {
 
-	private static final Pattern GITHUB_URL = Pattern.compile("^((http|https)://)?github\\.com(/.*)?$");
+	private static final Pattern GITHUB_URL = Pattern.compile("^(\\w+://)?github\\.com(/.*)?$");
 
 	public static VCSInfo getVCSInfoDialog(Window parent, String text) {
 		return getVCSInfoDialog(parent, text, null, null, false, true);

@@ -62,7 +62,7 @@ public class BranchesPopup extends JPopupMenu {
 										.setStartPoint(git.getRepository().getFullBranch()).call();
 								git.checkout().setName(newBranchName).call();
 
-								mcreator.reloadWorkspaceTabContents();
+								mcreator.getWorkspacePanel().reloadWorkspaceTab();
 
 								try { // try to push if remote exists
 									git.push().setRemote("origin")
@@ -93,7 +93,7 @@ public class BranchesPopup extends JPopupMenu {
 						if (!newName.isEmpty()) {
 							try {
 								git.branchRename().setNewName(newName).call();
-								mcreator.reloadWorkspaceTabContents();
+								mcreator.getWorkspacePanel().reloadWorkspaceTab();
 							} catch (GitAPIException er) {
 								LOG.error("Failed to rename branch", er);
 							}
