@@ -22,13 +22,14 @@ package net.mcreator.vcs.ui.actions.impl;
 import net.mcreator.ui.action.ActionRegistry;
 import net.mcreator.ui.init.L10N;
 import net.mcreator.ui.init.UIRES;
+import net.mcreator.ui.workspace.AbstractWorkspacePanel;
 import net.mcreator.vcs.workspace.WorkspaceVCS;
 
 import javax.swing.*;
 
 public class UnlinkVCSAction extends VCSAction {
 
-	public UnlinkVCSAction(ActionRegistry actionRegistry) {
+	@SuppressWarnings("unchecked") public UnlinkVCSAction(ActionRegistry actionRegistry) {
 		super(actionRegistry, L10N.t("action.vcs.unlink"), e -> {
 			int n = JOptionPane.showConfirmDialog(actionRegistry.getMCreator(), L10N.t("dialog.vcs.unlink.message"),
 					L10N.t("common.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -36,7 +37,13 @@ public class UnlinkVCSAction extends VCSAction {
 				WorkspaceVCS.removeVCSWorkspace(actionRegistry.getMCreator().getWorkspace());
 				actionRegistry.getActions().stream().filter(action -> action instanceof VCSAction)
 						.forEach(action -> ((VCSAction) action).vcsStateChanged());
-				actionRegistry.getMCreator().getWorkspacePanel().switchToVerticalTab("mods");
+				try {
+					actionRegistry.getMCreator().getWorkspacePanel().switchToVerticalTab(
+							actionRegistry.getMCreator().getWorkspacePanel().getVerticalTab(
+									(Class<? extends AbstractWorkspacePanel>) Class.forName(
+											"net.mcreator.ui.workspace.WorkspacePanel.WorkspacePanelMods")));
+				} catch (ClassNotFoundException ignored) {
+				}
 			}
 		});
 		setIcon(UIRES.get("16px.vcs_unlink"));

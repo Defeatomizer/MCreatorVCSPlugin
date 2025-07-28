@@ -69,7 +69,7 @@ import java.util.ServiceLoader;
 				LOG.info("Loaded VCS for current workspace");
 
 			SwingUtilities.invokeLater(() -> {
-				mcreator.getWorkspacePanel().addVerticalTab("vcs", L10N.t("workspace.category.remote_workspace"),
+				mcreator.getWorkspacePanel().addVerticalTab(L10N.t("workspace.category.remote_workspace"),
 						new WorkspacePanelVCS(mcreator.getWorkspacePanel()));
 				initActions(mcreator);
 			});
