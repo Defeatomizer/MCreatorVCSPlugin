@@ -59,6 +59,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class WorkspacePanelVCS extends AbstractWorkspacePanel {
@@ -339,7 +340,7 @@ public class WorkspacePanelVCS extends AbstractWorkspacePanel {
 				for (RevCommit commit : git.log().add(repository.resolve(repository.getFullBranch())).call()) {
 					cachedCommits.add(commit);
 					model.addRow(new Object[] { commit.abbreviate(7).name(), "<html><b>" + commit.getShortMessage(),
-							commit.getAuthorIdent().getName(), commit.getAuthorIdent().getWhen() });
+							commit.getAuthorIdent().getName(), Date.from(commit.getAuthorIdent().getWhenAsInstant()) });
 				}
 			} catch (Exception ignored) {
 			}
