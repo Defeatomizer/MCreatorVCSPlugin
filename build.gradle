@@ -42,7 +42,7 @@ dependencies {
         //noinspection ForeignDelegate
         implementation it
     })
-    export group: 'org.openl.jgit', name: 'org.eclipse.jgit', version: '6.9.0.202403050737-openl'
+    export group: 'org.openl.jgit', name: 'org.eclipse.jgit', version: '7.3.0.202506031305-openl'
     export group: 'org.openl.jgit', name: 'org.eclipse.jgit.gpg.bc', version: '6.8.0.202311291450-openl'
     export group: 'org.openl.jgit', name: 'org.eclipse.jgit.ssh.apache', version: '6.8.0.202311291450-openl'
 }
