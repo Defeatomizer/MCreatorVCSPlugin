@@ -499,7 +499,7 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 		}
 
 		// process workspace base files
-		List<GeneratorTemplate> modBaseTemplates = localWorkspace.getGenerator().getModBaseGeneratorTemplatesList(true);
+		List<GeneratorTemplate> modBaseTemplates = localWorkspace.getGenerator().getModBaseGeneratorTemplatesList();
 		for (GeneratorTemplate generatorTemplate : modBaseTemplates) {
 			for (FileSyncHandle handle : handles) {
 				if (isVCSPathThisFile(localWorkspace, handle.getBasePath(), generatorTemplate.getFile())) {
