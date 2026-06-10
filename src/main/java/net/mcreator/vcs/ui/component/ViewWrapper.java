@@ -39,7 +39,7 @@ public class ViewWrapper extends ViewBase
 		super(mcreator);
 		add(viewContents = contents);
 
-		viewTab = new MCreatorTabs.Tab(this, id, uppercase);
+		viewTab = new MCreatorTabs.Tab(viewName, contents, id, true);
 		viewTab.setTabClosedListener(this);
 		viewTab.setTabClosingListener(this);
 		viewTab.setTabShownListener(this);
@@ -52,7 +52,6 @@ public class ViewWrapper extends ViewBase
 
 	public ViewWrapper setViewName(String viewName) {
 		viewTab.setText(this.viewName = viewName);
-		viewTab.updateSize();
 		return this;
 	}
 
@@ -62,7 +61,6 @@ public class ViewWrapper extends ViewBase
 
 	public ViewWrapper setViewIcon(ImageIcon viewIcon) {
 		viewTab.setIcon(this.viewIcon = viewIcon);
-		viewTab.updateSize();
 		return this;
 	}
 

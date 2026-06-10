@@ -58,7 +58,7 @@ public class VCSSetupDialogs {
 		AtomicBoolean validUri = new AtomicBoolean(false);
 		try {
 			URI helpURI = new URI("https://github.com/settings/tokens/new");
-			newToken.addActionListener(e -> DesktopUtils.browse(helpURI));
+			newToken.addActionListener(e -> DesktopUtils.browseSafe(String.valueOf(helpURI)));
 			validUri.set(true);
 		} catch (URISyntaxException ignored) {
 		}
