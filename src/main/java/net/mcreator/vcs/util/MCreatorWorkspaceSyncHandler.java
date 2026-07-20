@@ -399,7 +399,7 @@ public class MCreatorWorkspaceSyncHandler implements ICustomSyncHandler {
 
 								// update ME and MCItem icons
 								el.reloadElementIcon();
-								el.getMCItems().forEach(mcItem -> mcItem.icon.getImage().flush());
+								el.getMCItems().forEach(mcItem -> mcItem.getIcon().getImage().flush());
 
 								break; // there can be only one element with given name so no need to iterate further
 							}

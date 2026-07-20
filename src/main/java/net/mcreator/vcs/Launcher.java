@@ -38,13 +38,10 @@ import net.mcreator.workspace.ShareableZIPManager;
 import net.mcreator.workspace.WorkspaceUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.jgit.lib.GpgSignatureVerifierFactory;
-import org.eclipse.jgit.lib.GpgSigner;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import java.util.ServiceLoader;
 
 @SuppressWarnings("unused") public class Launcher extends JavaPlugin {
 
@@ -53,9 +50,6 @@ import java.util.ServiceLoader;
 	public Launcher(Plugin plugin) {
 		super(plugin);
 
-		ServiceLoader.load(GpgSigner.class, getClass().getClassLoader()).findFirst().ifPresent(GpgSigner::setDefault);
-		ServiceLoader.load(GpgSignatureVerifierFactory.class, getClass().getClassLoader()).findFirst()
-				.ifPresent(GpgSignatureVerifierFactory::setDefault);
 		ShareableZIPManager.excludeWhenZipping(".git/");
 
 		addListener(WorkspaceSelectorLoadedEvent.class, event -> SwingUtilities.invokeLater(() -> {

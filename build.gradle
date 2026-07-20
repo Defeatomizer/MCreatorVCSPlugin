@@ -14,7 +14,7 @@ repositories {
 group = 'net.mcreator.vcs'
 version = new JsonSlurper().parse(file('src/main/resources/plugin.json'))['info']['version']
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 idea {
     module {
@@ -42,11 +42,10 @@ dependencies {
         //noinspection ForeignDelegate
         implementation it
     })
-    export group: 'org.openl.jgit', name: 'org.eclipse.jgit', version: '6.9.0.202403050737-openl'
-    export group: 'org.openl.jgit', name: 'org.eclipse.jgit.gpg.bc', version: '6.8.0.202311291450-openl'
-    export group: 'org.openl.jgit', name: 'org.eclipse.jgit.ssh.apache', version: '6.8.0.202311291450-openl'
+    implementation group: 'org.eclipse.jgit', name: 'org.eclipse.jgit', version: '7.7.0.202606012155-r'
+    implementation group: 'org.eclipse.jgit', name: 'org.eclipse.jgit.gpg.bc', version: '7.7.0.202606012155-r'
+    implementation group: 'org.eclipse.jgit', name: 'org.eclipse.jgit.ssh.apache', version: '7.7.0.202606012155-r'
 }
-
 tasks.jar {
     archiveFileName.set('mcreator-vcs-' + project.version + '.zip')
 

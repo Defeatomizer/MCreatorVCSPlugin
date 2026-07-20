@@ -2,13 +2,13 @@
   "id": "vcs",
   "weight": 10,
   "supportedversions": [
-    202600114619
+    2026002
   ],
   "javaplugin": "net.mcreator.vcs.Launcher",
   "info": {
     "name": "MCreator VCS plugin",
     "author": "MCreator, Defeatomizer",
-    "version": "2026.1.1",
+    "version": "2026.2.1",
     "updateJSONURL": "https://drive.google.com/uc?id=1ZljgXiBC7whAeiJ7XqUp9PwJ8M_j7hIb",
     "pluginPageID": 97468
   }
